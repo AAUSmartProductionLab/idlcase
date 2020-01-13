@@ -1,0 +1,5 @@
+---
+- name: add public key to user pi
+  copy:
+    src: id_rsa.pub
+    dest: /home/pi/.ssh/authorized_keys
