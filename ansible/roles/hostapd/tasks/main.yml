@@ -35,3 +35,20 @@
   copy:
     src: wlan0.network
     dest: /etc/systemd/network/wlan0.network
+
+- name: install dnsmasq
+  apt:
+    name: dnsmasq
+    state: present
+
+- name: configure dnsmasq
+  copy:
+    src: wlan0.dnsmasq.conf
+    dest: /etc/dnsmasq.d/wlan0.conf
+  register: hostapddnsmasq
+
+- name: restart dnsmasq
+  service:
+    name: dnsmasq
+    state: restarted
+  when: hostapddnsmasq.changed
