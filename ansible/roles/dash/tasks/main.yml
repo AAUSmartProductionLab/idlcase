@@ -1,0 +1,12 @@
+---
+- name: Upload dash binary
+  copy:
+    src: dash-arm-build
+    dest: /home/pi/dash
+  register: dashbinary
+
+- name: Restart getty@tty1.service
+  service:
+    name: getty@tty1.service
+    state: restarted
+  when: dashbinary.changed
