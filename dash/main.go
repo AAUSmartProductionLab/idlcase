@@ -85,7 +85,7 @@ func layout(g *gocui.Gui) error {
 		}
 
 		mqttConnected.Wrap = false
-		mqttConnected.Title = "(%d) Active MQTT clients"
+		mqttConnected.Title = "MQTT clients"
 	}
 
 	if statusView, err = g.SetView("stats", maxX-35, 0, maxX-1, maxY/2-1); err != nil {
