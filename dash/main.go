@@ -57,6 +57,16 @@ func refreshStatus() {
 	g.Update(func(g *gocui.Gui) error {
 		statusView.Clear()
 		for _, device := range ifStat {
+			// We dont fancy localhost
+			if device.Name == "lo" {
+				continue
+			}
+
+			// We dont care about devices without addresses
+			if len(device.Addrs) == 0 {
+				continue
+			}
+
 			color.New(color.FgYellow).Fprintf(statusView, "%s\n", device.Name)
 			for _, address := range device.Addrs {
 				fmt.Fprintf(statusView, "%s\n", address.Addr)
