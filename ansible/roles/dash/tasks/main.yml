@@ -1,4 +1,10 @@
 ---
+- name: Takeover getty@tty1
+  copy:
+    src: getty-override.conf
+    dest: /etc/systemd/system/getty@tty1.service.d/override.conf
+  register: dashgettyoverride
+
 - name: Upload dash binary
   copy:
     src: dash-arm-build
@@ -9,4 +15,5 @@
   service:
     name: getty@tty1.service
     state: restarted
-  when: dashbinary.changed
+    daemon_reload: true
+  when: dashbinary.changed or dashgettyoverride.changed
