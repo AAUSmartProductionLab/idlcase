@@ -5,7 +5,7 @@ clean:
 
 # This step should be dockerized at some point
 dash: dash/*.go
-	cd dash; go build -o ../ansible/dash-build .
+	cd dash; GOARCH=arm go build -o ../ansible/dash-arm-build .
 
 .PHONY: playbook
 playbook: dash
