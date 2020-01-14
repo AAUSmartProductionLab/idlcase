@@ -1,0 +1,26 @@
+---
+- name: install hostapd
+  apt:
+    # rasbian does not have aptitude
+    force_apt_get: true
+    name: hostapd
+    state: present
+
+- name: configure hostapd
+  copy:
+    src: hostapd.conf
+    dest: /etc/hostapd/hostapd.conf
+  register: hostapdconf
+
+- name: enable hostapd
+  service:
+    name: hostapd
+    masked: false
+    enabled: true
+    state: started
+
+- name: (re)start hostapd
+  service:
+    name: hostapd
+    state: restarted
+  when: hostapdconf.changed
