@@ -24,3 +24,14 @@
     name: hostapd
     state: restarted
   when: hostapdconf.changed
+
+- name: enable networkd
+  service:
+    name: systemd-networkd
+    state: started
+    enabled: true
+
+- name: set wlan0 configuration
+  copy:
+    src: wlan0.network
+    dest: /etc/systemd/network/wlan0.network
