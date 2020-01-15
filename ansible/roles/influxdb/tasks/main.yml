@@ -1,0 +1,29 @@
+---
+- name: add influxdb apt key
+  apt_key:
+    url: https://repos.influxdata.com/influxdb.key
+
+- name: install apt https transport
+  apt:
+    force_apt_get: true
+    name: apt-transport-https
+    state: present
+
+- name: add influxdb apt repository
+  apt_repository: 
+    repo: 'deb https://repos.influxdata.com/debian buster stable' 
+    state: present 
+    filename: influxdb 
+    update_cache: yes
+
+- name: install influxdb
+  apt:
+    force_apt_get: true
+    name: influxdb
+    state: present
+
+- name: enable and startup influxdb
+  service:
+    name: influxdb
+    state: started
+    enabled: true
