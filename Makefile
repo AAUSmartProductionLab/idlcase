@@ -10,4 +10,4 @@ dash: dash/*.go
 .PHONY: playbook
 playbook: dash
 	docker run -w /project -e HOME=/project --rm -it -v $(ROOT_DIR)/ansible:/project \
-		ansible/ansible-runner ansible-playbook main.yml -i inventory.yml
+		ansible/ansible-runner ansible-playbook main.yml $(OPTIONS) -i inventory.yml

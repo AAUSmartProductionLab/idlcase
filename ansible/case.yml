@@ -1,9 +1,9 @@
 ---
 - hosts: case
-  roles:
-    - common
-    - users
-    - dash
-    - hostapd
-    - influxdb
-    - grafana
+  roles: # tags used for skipping roles
+    - { name: common,   tags: common }
+    - { name: users,    tags: users }
+    - { name: dash,     tags: dash }
+    - { name: hostapd,  tags: hostapd }
+    - { name: influxdb, tags: influxdb }
+    - { name: grafana,  tags: grafana }
