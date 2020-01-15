@@ -1,0 +1,23 @@
+---
+- name: grafana requirement adduser
+  apt:
+    force_apt_get: true
+    name: adduser
+    state: present
+
+- name: grafana requirement libfontconfig1
+  apt:
+    force_apt_get: true
+    name: libfontconfig1
+    state: present
+
+- name: install grafana
+  apt:
+    deb: https://dl.grafana.com/oss/release/grafana-rpi_6.5.3_armhf.deb
+
+- name: enable and start grafana
+  service:
+    name: grafana-server
+    state: started
+    enabled: true
+    daemon-reload: true
