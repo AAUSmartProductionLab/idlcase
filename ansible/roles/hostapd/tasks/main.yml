@@ -25,16 +25,33 @@
     state: restarted
   when: hostapdconf.changed
 
+- name: set wlan0 configuration
+  copy:
+    src: wlan0.network
+    dest: /etc/systemd/network/wlan0.network
+
+- name: set eth0 configuration
+  copy:
+    src: eth0.network
+    dest: /etc/systemd/network/eth0.network
+
+- name: remove ifupdown (included with raspbian)
+  apt:
+    name: ifupdown
+    state: absent
+
+# dhcpcd conflicts with networkd
+- name: disable dhcpcd
+  service:
+    name: dhcpcd
+    state: stopped
+    masked: true
+
 - name: enable networkd
   service:
     name: systemd-networkd
     state: started
     enabled: true
-
-- name: set wlan0 configuration
-  copy:
-    src: wlan0.network
-    dest: /etc/systemd/network/wlan0.network
 
 - name: install dnsmasq
   apt:
