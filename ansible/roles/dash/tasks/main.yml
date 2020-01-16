@@ -1,17 +1,17 @@
 ---
-- name: Takeover getty@tty1
+- name: takeover getty@tty1
   copy:
     src: getty-override.conf
     dest: /etc/systemd/system/getty@tty1.service.d/override.conf
   register: dashgettyoverride
 
-- name: Upload dash binary
+- name: upload dash binary
   copy:
     src: dash-arm-build
     dest: /home/pi/dash
   register: dashbinary
 
-- name: Restart getty@tty1.service
+- name: restart getty@tty1.service
   service:
     name: getty@tty1.service
     state: restarted
