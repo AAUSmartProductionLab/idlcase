@@ -1,0 +1,12 @@
+---
+- name: install mosquitto
+  apt:
+    name: mosquitto
+    state: present
+    force_apt_get: true
+
+- name: enable and start mosquitto
+  service:
+    name: mosquitto
+    state: started
+    enabled: true
