@@ -1,17 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"time"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
-	"github.com/shirou/gopsutil/net"
 )
 
 var (
-	statusView    *gocui.View
+	statusView    *Status
 	mqttConnected *gocui.View
 	logView       *gocui.View
 	g             *gocui.Gui
@@ -23,57 +19,22 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+
 	defer g.Close()
 
 	g.SetManagerFunc(layout)
+	layout(g)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
 
-	go uiLoop()
+	go statusView.Loop()
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 
-}
-
-func uiLoop() {
-	for {
-		refreshStatus()
-		time.Sleep(time.Millisecond * 250)
-	}
-}
-
-func refreshStatus() {
-	ifStat, err := net.Interfaces()
-	if err != nil {
-		panic(err)
-	}
-
-	// g.Update ensures no other routines
-	// are updating the interface
-	g.Update(func(g *gocui.Gui) error {
-		statusView.Clear()
-		for _, device := range ifStat {
-			// We dont fancy localhost
-			if device.Name == "lo" {
-				continue
-			}
-
-			// We dont care about devices without addresses
-			if len(device.Addrs) == 0 {
-				continue
-			}
-
-			color.New(color.FgYellow).Fprintf(statusView, "%s\n", device.Name)
-			for _, address := range device.Addrs {
-				fmt.Fprintf(statusView, "%s\n", address.Addr)
-			}
-		}
-		return nil
-	})
 }
 
 func layout(g *gocui.Gui) error {
@@ -88,11 +49,12 @@ func layout(g *gocui.Gui) error {
 		mqttConnected.Title = "MQTT clients"
 	}
 
-	if statusView, err = g.SetView("stats", maxX-35, 0, maxX-1, maxY/2-1); err != nil {
+	s, err := g.SetView("stats", maxX-35, 0, maxX-1, maxY/2-1)
+	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-
+		statusView = &Status{View: s}
 		statusView.Title = "Status"
 	}
 
