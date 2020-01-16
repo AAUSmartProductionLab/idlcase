@@ -46,7 +46,7 @@ func layout(g *gocui.Gui) error {
 		}
 
 		mqttConnected.Wrap = false
-		mqttConnected.Title = "MQTT clients"
+		mqttConnected.Title = "Sensors"
 	}
 
 	s, err := g.SetView("stats", maxX-35, 0, maxX-1, maxY/2-1)
@@ -54,6 +54,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
+
 		statusView = &Status{View: s}
 		statusView.Title = "Status"
 	}
