@@ -111,7 +111,7 @@ void loop() {
     if (itr <= 0) {
       direction = true;
     }
-    sprintf(msgBuf, "{value: %f, unit:\"dummy\"}", d);
+    sprintf(msgBuf, "{\"value\": %f, \"unit\":\"B/s\"}", d);
     client.publish(mqtt_topic, msgBuf);
 
     displayLoop();
