@@ -3,14 +3,16 @@ package gui
 import (
 	"fmt"
 
+	"github.com/fasmide/idlcase/dash/sensor"
 	"github.com/jroimartin/gocui"
 )
 
 var (
-	statusView    *Status
-	mqttConnected *gocui.View
-	logView       *Log
-	g             *gocui.Gui
+	statusView *Status
+	sensorView *Sensor
+	logView    *Log
+
+	g *gocui.Gui
 )
 
 // Run initiates the GUI and blocks until finished
@@ -31,6 +33,7 @@ func Run() error {
 	}
 
 	go statusView.Loop()
+	go sensorView.Loop()
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		return fmt.Errorf("main loop failed: %w", err)
@@ -39,16 +42,21 @@ func Run() error {
 	return nil
 }
 
+// SensorUpdate is the glue that connects our sensorView to the mqtt transport
+func SensorUpdate(msg sensor.Message) {
+	sensorView.Update(msg)
+}
+
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	var err error
-	if mqttConnected, err = g.SetView("mqtt", 0, 0, maxX-35, maxY/2-1); err != nil {
+
+	sV, err := g.SetView("mqtt", 0, 0, maxX-35, maxY/2-1)
+	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-
-		mqttConnected.Wrap = false
-		mqttConnected.Title = "Sensors"
+		sensorView = &Sensor{View: sV}
+		sensorView.Init()
 	}
 
 	s, err := g.SetView("stats", maxX-35, 0, maxX-1, maxY/2-1)
@@ -58,7 +66,6 @@ func layout(g *gocui.Gui) error {
 		}
 
 		statusView = &Status{View: s}
-		statusView.Title = "Status"
 	}
 
 	l, err := g.SetView("log", 0, maxY/2-1, maxX-1, maxY)
