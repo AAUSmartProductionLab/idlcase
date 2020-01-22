@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/fasmide/idlcase/dash/sensor"
+
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 )
 
@@ -15,17 +17,25 @@ type Sensor struct {
 	*gocui.View
 	sync.RWMutex
 
-	// deviceNames is sorted and used to ensure
+	// metrics is sorted and used to ensure
 	// the same print order
-	deviceIDs []string
+	metrics []string
 
-	// lastMessages holds the last message received indexed by deviceID
-	lastMessages map[string]sensor.Message
+	// lastMessages holds the last message received indexed by metric
+	lastMessages map[string]DisplayMessage
+}
+
+// DisplayMessage knows about the previous value
+// and decides if the color should be red green or neutral
+type DisplayMessage struct {
+	sensor.Message
+
+	color *color.Color
 }
 
 func (s *Sensor) Init() {
-	s.deviceIDs = make([]string, 0)
-	s.lastMessages = make(map[string]sensor.Message)
+	s.metrics = make([]string, 0)
+	s.lastMessages = make(map[string]DisplayMessage)
 
 	s.Wrap = false
 	s.Title = "Sensors"
@@ -35,18 +45,30 @@ func (s *Sensor) Init() {
 func (s *Sensor) Update(msg sensor.Message) {
 	s.Lock()
 
-	_, exists := s.lastMessages[msg.DeviceID]
-	s.lastMessages[msg.DeviceID] = msg
+	lMsg, exists := s.lastMessages[msg.Metric()]
+	dMsg := DisplayMessage{Message: msg}
+
+	// decide a color for the metric value
+	if lMsg.Measurement.Value == msg.Measurement.Value {
+		dMsg.color = color.New(color.FgWhite)
+	}
+	if lMsg.Measurement.Value < msg.Measurement.Value {
+		dMsg.color = color.New(color.FgGreen)
+	}
+	if lMsg.Measurement.Value > msg.Measurement.Value {
+		dMsg.color = color.New(color.FgRed)
+	}
+
+	s.lastMessages[msg.Metric()] = dMsg
 
 	if !exists {
 		// if this is the first time we have seen this device
-		// add it to deviceIDs and have it sorted
-		s.deviceIDs = append(s.deviceIDs, msg.DeviceID)
-		sort.Strings(s.deviceIDs)
+		// add it to metrics and have it sorted
+		s.metrics = append(s.metrics, msg.Metric())
+		sort.Strings(s.metrics)
 	}
 
 	s.Unlock()
-
 	// render will do its thing eventually
 }
 
@@ -64,11 +86,13 @@ func (s *Sensor) render() {
 		s.Clear()
 
 		// loop deviceIDs as these are sorted correctly
-		for _, idx := range s.deviceIDs {
+		for _, idx := range s.metrics {
 			lMsg := s.lastMessages[idx]
-			fmt.Fprintf(s, "%s: %02f %s %s\n",
-				lMsg.DeviceID,
-				lMsg.Measurement.Value,
+			precisionFormat := fmt.Sprintf("%%9.%df", lMsg.Precision())
+
+			fmt.Fprintf(s, "%-18.18s: %s %-4s %s\n",
+				lMsg.Metric(),
+				lMsg.color.Sprintf(precisionFormat, lMsg.Measurement.Value),
 				lMsg.Measurement.Unit,
 				time.Now().Sub(lMsg.At),
 			)

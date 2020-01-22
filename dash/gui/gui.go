@@ -66,6 +66,7 @@ func layout(g *gocui.Gui) error {
 		}
 
 		statusView = &Status{View: s}
+		statusView.Title = "Status"
 	}
 
 	l, err := g.SetView("log", 0, maxY/2-1, maxX-1, maxY)

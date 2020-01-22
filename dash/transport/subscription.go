@@ -24,7 +24,7 @@ type Subscription struct {
 // Run subscribes to topic and handles data
 func (s *Subscription) Run() error {
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://172.27.23.173:1883")
+	opts.AddBroker("tcp://127.0.0.1:1883")
 	opts.SetClientID("dash")
 	opts.SetDefaultPublishHandler(s.handleMessage)
 

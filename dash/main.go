@@ -7,7 +7,8 @@ import (
 
 func main() {
 
-	sub := transport.Subscription{Topic: "idl/#",
+	sub := transport.Subscription{
+		Topic: "idl/#",
 		Handlers: []transport.Handler{
 			gui.SensorUpdate,
 		},
