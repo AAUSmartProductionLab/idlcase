@@ -3,7 +3,6 @@
 
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_BMP280.h>
 
 #include "SSD1306Wire.h"        
 
@@ -54,7 +53,7 @@ char mqtt_topic[32];
 void setup() {
     Serial.begin(115200);
     delay(100);
-    sprintf(deviceId, "%06X", ESP.getEfuseMac());
+    sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
     sprintf(mqtt_topic, "idl/%s/sin", deviceId);
 
     // Initialising the UI will init the display too.
@@ -111,7 +110,7 @@ void loop() {
     if (itr <= 0) {
       direction = true;
     }
-    sprintf(msgBuf, "{\"value\": %f, \"unit\":\"B/s\"}", d);
+    sprintf(msgBuf, "{\"value\": %f, \"unit\":\"Bs/s\"}", d);
     client.publish(mqtt_topic, msgBuf);
 
     displayLoop();
