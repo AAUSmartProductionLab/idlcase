@@ -6,3 +6,15 @@
     state: started
     # ensure its started on boot
     enabled: true
+
+- name: set fallback ntp servers
+  copy:
+    src: timesyncd.conf
+    dest: /etc/systemd/timesyncd.conf
+  register: timesyncdconf
+
+- name: ensure timesyncd is restarted
+  service:
+    name: systemd-timesyncd
+    state: restarted
+  when: timesyncdconf.changed
