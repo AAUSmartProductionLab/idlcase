@@ -1,0 +1,6 @@
+---
+- name: make sure wvdial is installed
+  apt:
+    name: wvdial
+    state: present
+    force_apt_get: true
