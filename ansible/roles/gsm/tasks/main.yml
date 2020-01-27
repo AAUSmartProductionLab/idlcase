@@ -4,3 +4,10 @@
     name: wvdial
     state: present
     force_apt_get: true
+
+- name: add wvdial configuration for Telenor
+  copy:
+    src: wvdial.conf
+    dest: /etc/wvdial.conf
+
+# This should be set up as a service at some point 
