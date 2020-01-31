@@ -28,13 +28,7 @@ func NewStore() (*Store, error) {
 
 // Add adds a received sensor message for storage
 func (s *Store) Add(m sensor.Message) error {
-	point, err := client.NewPoint(m.Type, map[string]string{
-		"deviceID": m.DeviceID,
-		"unit":     m.Measurement.Unit,
-	}, map[string]interface{}{
-		"value": m.Measurement.Value,
-	}, m.At)
-
+	point, err := m.ToPoint()
 	if err != nil {
 		return fmt.Errorf("unable to create point from Message: %w", err)
 	}

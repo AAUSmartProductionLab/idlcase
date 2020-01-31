@@ -60,7 +60,7 @@ func (s *Subscription) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 	smsg.Type = fields[2]
 	smsg.At = time.Now()
 
-	err := json.Unmarshal(msg.Payload(), &smsg.Measurement)
+	err := json.Unmarshal(msg.Payload(), &smsg)
 	if err != nil {
 		log.Printf("unable to unmarshal json from mqtt message: %s", err)
 		return

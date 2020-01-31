@@ -22,7 +22,7 @@ type Sensor struct {
 	metrics []string
 
 	// lastMessages holds the last message received indexed by metric
-	lastMessages map[string]DisplayMessage
+	lastMessages map[string]*DisplayMessage
 }
 
 // DisplayMessage knows about the previous value
@@ -35,7 +35,7 @@ type DisplayMessage struct {
 
 func (s *Sensor) Init() {
 	s.metrics = make([]string, 0)
-	s.lastMessages = make(map[string]DisplayMessage)
+	s.lastMessages = make(map[string]*DisplayMessage)
 
 	s.Wrap = false
 	s.Title = "Sensors"
@@ -44,21 +44,11 @@ func (s *Sensor) Init() {
 // Update handles sensor messages
 func (s *Sensor) Update(msg sensor.Message) {
 	s.Lock()
+	defer s.Unlock()
 
 	lMsg, exists := s.lastMessages[msg.Metric()]
-	dMsg := DisplayMessage{Message: msg}
 
-	// decide a color for the metric value
-	if lMsg.Measurement.Value == msg.Measurement.Value {
-		dMsg.color = color.New(color.FgWhite)
-	}
-	if lMsg.Measurement.Value < msg.Measurement.Value {
-		dMsg.color = color.New(color.FgGreen)
-	}
-	if lMsg.Measurement.Value > msg.Measurement.Value {
-		dMsg.color = color.New(color.FgRed)
-	}
-
+	dMsg := &DisplayMessage{Message: msg, color: color.New(color.FgWhite)}
 	s.lastMessages[msg.Metric()] = dMsg
 
 	if !exists {
@@ -66,10 +56,23 @@ func (s *Sensor) Update(msg sensor.Message) {
 		// add it to metrics and have it sorted
 		s.metrics = append(s.metrics, msg.Metric())
 		sort.Strings(s.metrics)
+		return
 	}
 
-	s.Unlock()
-	// render will do its thing eventually
+	n, err := msg.Data.Compare(lMsg.Data)
+	if err != nil {
+		// comparison errors are unforgivable
+		panic(err)
+	}
+
+	// default color is FgWhite
+	if n == 1 {
+		dMsg.color = color.New(color.FgGreen)
+	}
+	if n == -1 {
+		dMsg.color = color.New(color.FgRed)
+	}
+
 }
 
 // Loop ensures the view is updated at a fixed rate
@@ -88,25 +91,15 @@ func (s *Sensor) render() {
 		// loop deviceIDs as these are sorted correctly
 		for _, idx := range s.metrics {
 			lMsg := s.lastMessages[idx]
-			precisionFormat := fmt.Sprintf("%%9.%df", lMsg.Precision())
 
-			// pick a color for "since"
-			since := time.Now().Sub(lMsg.At).Round(time.Second)
-			var sinceFormatted string
-			switch {
-			case since >= 10*time.Second:
-				sinceFormatted = color.RedString("%s", since)
-			case since >= 5*time.Second:
-				sinceFormatted = color.YellowString("%s", since)
-			default:
-				sinceFormatted = since.String()
-			}
+			// we format the value seperatly, as the colors adds bytes which confuses precision and padding
+			valueFormat := fmt.Sprintf("%15.15s", lMsg.Data.PrettyValue())
 
 			fmt.Fprintf(s, "%-18.18s: %s %-4s %s\n",
 				lMsg.Metric(),
-				lMsg.color.Sprintf(precisionFormat, lMsg.Measurement.Value),
-				lMsg.Measurement.Unit,
-				sinceFormatted,
+				lMsg.color.Sprint(valueFormat),
+				lMsg.Data.PrettyUnit(),
+				lMsg.Since(),
 			)
 		}
 
