@@ -56,11 +56,11 @@ EasyButton button(26);
 char msgBuf[50];
 
 void onPressed() {
-  client.publish(mqtt_topic, "{\"type\": \"buttonpress\", \"msg\": \"Green button single pressed\"}");
+  client.publish(mqtt_topic, "{\"type\": \"btnGreenShort\", \"msg\": \"Green button single pressed\"}");
 }
 
 void onPressedForDuration() {
-  client.publish(mqtt_topic, "{\"type\": \"buttonlongpress\", \"msg\": \"Green button long pressed\"}");
+  client.publish(mqtt_topic, "{\"type\": \"btnGreenLong\", \"msg\": \"Green button long pressed\"}");
 }
 
 void setup() {
@@ -112,6 +112,7 @@ void loop() {
   }
 
   client.loop();
+
   button.read();
 
   displayLoop();
