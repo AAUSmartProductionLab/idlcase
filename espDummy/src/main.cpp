@@ -71,6 +71,10 @@ void setup() {
 }
 
 void reconnect() {
+  if(WiFi.status() != WL_CONNECTED) {
+    connectToWiFi();
+  }
+  
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -96,6 +100,9 @@ void loop() {
     if (!client.connected()) {
       reconnect();
     }
+    
+    client.loop();
+
     if (direction) {
       d = sin(itr);
       itr += 0.005;
