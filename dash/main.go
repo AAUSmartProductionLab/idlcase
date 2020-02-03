@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/fasmide/idlcase/dash/gui"
 	"github.com/fasmide/idlcase/dash/sensor"
 	"github.com/fasmide/idlcase/dash/storage"
@@ -14,21 +16,18 @@ func main() {
 		panic(err)
 	}
 
-	logStoreErrors := func(m sensor.Message) {
-		err := store.Add(m)
+	logAndStore := func(m sensor.Message) {
+		err = store.Add(m)
 		if err != nil {
-			// panic is maybe quite overkill in this case - we should just
-			// wait and see if its possible to reconnect
-			panic(err)
+			log.Printf("unable to store data: %s", err)
 		}
-
 	}
 
 	sub := transport.Subscription{
 		Topic: "idl/#",
 		Handlers: []transport.Handler{
 			gui.SensorUpdate,
-			logStoreErrors,
+			logAndStore,
 		},
 	}
 
