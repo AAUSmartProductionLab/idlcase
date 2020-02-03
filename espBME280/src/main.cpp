@@ -145,6 +145,10 @@ void setup() {
 }
 
 void reconnect() {
+  if(WiFi.status() != WL_CONNECTED) {
+    connectToWiFi();
+  }
+
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -166,7 +170,9 @@ void loop() {
     if (!client.connected()) {
       reconnect();
     }
-
+    
+    client.loop();
+    
     sprintf(msgBuf, "{\"value\": %f, \"unit\":\"*C\"}", bme.readTemperature());
     client.publish(mqtt_topic_temperature, msgBuf);
 
