@@ -90,11 +90,23 @@ func (s *Sensor) render() {
 			lMsg := s.lastMessages[idx]
 			precisionFormat := fmt.Sprintf("%%9.%df", lMsg.Precision())
 
+			// pick a color for "since"
+			since := time.Now().Sub(lMsg.At).Round(time.Second)
+			var sinceFormatted string
+			switch {
+			case since >= 10*time.Second:
+				sinceFormatted = color.RedString("%s", since)
+			case since >= 5*time.Second:
+				sinceFormatted = color.YellowString("%s", since)
+			default:
+				sinceFormatted = since.String()
+			}
+
 			fmt.Fprintf(s, "%-18.18s: %s %-4s %s\n",
 				lMsg.Metric(),
 				lMsg.color.Sprintf(precisionFormat, lMsg.Measurement.Value),
 				lMsg.Measurement.Unit,
-				time.Now().Sub(lMsg.At),
+				sinceFormatted,
 			)
 		}
 
