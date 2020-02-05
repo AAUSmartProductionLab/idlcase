@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fasmide/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/sensor"
 
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"

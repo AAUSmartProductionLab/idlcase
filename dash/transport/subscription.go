@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"bitbucket.org/ragroup/idlcase/dash/sensor"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/fasmide/idlcase/dash/sensor"
 )
 
 type Handler func(sensor.Message)

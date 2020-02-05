@@ -3,7 +3,7 @@ package gui
 import (
 	"fmt"
 
-	"github.com/fasmide/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/sensor"
 	"github.com/jroimartin/gocui"
 )
 

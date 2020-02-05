@@ -1,4 +1,4 @@
-module github.com/fasmide/idlcase/dash
+module bitbucket.org/ragroup/idlcase/dash
 
 go 1.13
 
