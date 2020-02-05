@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/fasmide/idlcase/dash/gui"
-	"github.com/fasmide/idlcase/dash/sensor"
-	"github.com/fasmide/idlcase/dash/storage"
-	"github.com/fasmide/idlcase/dash/transport"
+	"bitbucket.org/ragroup/idlcase/dash/fota"
+	"bitbucket.org/ragroup/idlcase/dash/gui"
+	"bitbucket.org/ragroup/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/storage"
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/fasmide/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/sensor"
 
 	client "github.com/influxdata/influxdb1-client/v2"
 )
