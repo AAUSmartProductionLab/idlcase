@@ -13,11 +13,13 @@ import (
 func main() {
 	// fota is our over-the-air update manager
 	// Its just a webserver with a few endpoints
-	fota, err := fota.NewWebserver("/firmware")
+	fota := fota.Webserver{}
+	err := fota.Setup()
 	if err != nil {
 		panic(err)
 	}
 
+	// run ota in its own routine
 	go func() {
 		err := fota.ListenAndServe()
 		if err != nil {
