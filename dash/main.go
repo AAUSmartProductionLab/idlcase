@@ -11,6 +11,19 @@ import (
 )
 
 func main() {
+	// fota is our over-the-air update manager
+	// Its just a webserver with a few endpoints
+	fota, err := fota.NewWebserver("/firmware")
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		err := fota.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	store, err := storage.NewStore()
 	if err != nil {
