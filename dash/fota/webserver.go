@@ -18,9 +18,12 @@ type Webserver struct {
 	// and served from
 	StorePath string
 
-	// DatabasePath is a directory containing json files descriping
+	// DatabasePath is a directory containing json files describing
 	// what firmware a device type should use
 	DatabasePath string
+
+	// PublishFirmware allows "announce" endpoint to publish firmwares
+	PublishFirmware func(string, string) error
 }
 
 // Setup creates needed directories, applies http handlers and and sane defaults
@@ -31,6 +34,13 @@ func (w *Webserver) Setup() error {
 	}
 	if w.DatabasePath == "" {
 		w.DatabasePath = "/database"
+	}
+
+	if w.PublishFirmware == nil {
+		w.PublishFirmware = func(_, _ string) error {
+			log.Printf("programmer did not supply a PublishFirmware method...")
+			return nil
+		}
 	}
 
 	err := ensureDirectory(w.StorePath)
@@ -55,6 +65,19 @@ func (w *Webserver) Setup() error {
 	w.Server.Handler = mux
 
 	return nil
+}
+
+// publishFirmware endpoint is called like this:
+// PUT /publish/<espType>/<firmware-name>
+// E.g. /publish/espBME280/9F6D45CF23BCA7EEA6D962F9AA7BF4DB
+// where espBME280 is something platformio and the devices them selves should know about
+// and the hash is returned from "POST /firmware" call's
+func (s *Webserver) announceFirmware(w http.ResponseWriter, r *http.Request) {
+	// All information needed is found in the url
+	r.Body.Close()
+
+	// we need to know the current firmware version
+
 }
 
 func (s *Webserver) acceptFirmware(w http.ResponseWriter, r *http.Request) {
