@@ -28,6 +28,7 @@ type Webserver struct {
 	Database Database
 
 	// PublishFirmware allows "announce" endpoint to publish firmwares
+	// it only accepts a string which should be the firmware Type.
 	PublishFirmware func(string) error
 }
 
@@ -65,11 +66,16 @@ func (w *Webserver) Setup() error {
 	mux.Handle("/db/", http.StripPrefix("/db/", http.FileServer(http.Dir(string(w.Database)))))
 
 	mux.HandleFunc("/firmware", w.acceptFirmware)
-	mux.HandleFunc("/announce", w.announceFirmware)
+	mux.HandleFunc("/announce/", w.announceFirmware)
+	mux.HandleFunc("/hello", w.hello)
 
 	w.Server.Handler = mux
 
 	return nil
+}
+
+func (w *Webserver) hello(rw http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(rw, "Hello")
 }
 
 // announceFirmware endpoint is called like this:
@@ -88,13 +94,14 @@ func (w *Webserver) announceFirmware(rw http.ResponseWriter, r *http.Request) {
 	// lets figure out stuff based on the url
 	parts := strings.Split(r.URL.Path, "/")
 
-	if len(parts) != 3 {
+	if len(parts) != 4 {
 		http.Error(rw, "url should contain /announce/type/firmwarename", http.StatusBadRequest)
+		log.Printf("bogus announce request: %+v", parts)
 		return
 	}
 
-	fType := parts[1]
-	fName := parts[2]
+	fType := parts[2]
+	fName := parts[3]
 
 	// more sanity: lets see if this firmware name acturally exists on disk
 	_, err := os.Stat(path.Join(w.StorePath, fName))
@@ -123,7 +130,7 @@ func (w *Webserver) announceFirmware(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// now it should just be a matter of publishing the new firmware
-	err = w.PublishFirmware(fType)
+	err = w.PublishFirmware(fmt.Sprintf("idlota/%s", fType))
 	if err != nil {
 		// we are going with a status OK - the firmware will be available for clients - it was just not published
 		http.Error(rw, "the firmware was updated, but i was unable to Publish this to clients", http.StatusOK)
