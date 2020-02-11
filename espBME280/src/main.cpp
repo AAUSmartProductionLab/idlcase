@@ -8,6 +8,21 @@
 #include "SSD1306Wire.h"        
 
 #include <PubSubClient.h>
+#include <esp32fota.h>
+
+#include "version.h"
+
+// where to listen for updates
+const char* otaTopic = "idlota/espBME280";
+
+// where to check for updates
+const char* otaMeta = "http://10.13.37.1/db/espBME280";
+
+const char* firmwareType = "espBME280";
+
+// every time a new firmware is released, existing esp devices
+// will check this type and version number to see if they need updating
+esp32FOTA fota(firmwareType, VERSION);
 
 void connectToWiFi() {
  
@@ -94,6 +109,7 @@ void scan() {
 
 SSD1306Wire display(0x3c, 5, 4);
 char deviceId[24];
+char versionString[24];
 void displayLoop() {
     display.clear();
     if (WiFi.status() != WL_CONNECTED) {
@@ -104,17 +120,49 @@ void displayLoop() {
       display.drawString(0, 0, deviceId);
       display.setFont(ArialMT_Plain_10);
       display.drawString(0, 25, WiFi.localIP().toString());
+      display.drawString(0, 36, versionString);
     }
 
     display.display();
 
 }
 
+void tryOTA() {
+  fota.checkURL = otaMeta;
+
+  bool updatedNeeded = fota.execHTTPcheck();
+  if (updatedNeeded) {
+
+    display.clear();
+    display.setFont(ArialMT_Plain_24);
+    display.drawString(0, 20, "Updating");
+    display.display();
+
+    fota.execOTA();
+  }
+}
+
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 char mqtt_topic_temperature[32];
 char mqtt_topic_humidity[32];
 char mqtt_topic_pressure[32];
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+  
+  // We will just assume any received message is a request for OTA updates
+  // FIXME
+  tryOTA();
+}
+
 
 void setup() {
     Serial.begin(115200);
@@ -124,6 +172,7 @@ void setup() {
     sprintf(mqtt_topic_temperature, "idl/%s/temperature", deviceId);
     sprintf(mqtt_topic_humidity, "idl/%s/humidity", deviceId);
     sprintf(mqtt_topic_pressure, "idl/%s/pressure", deviceId);
+    sprintf(versionString, "%s: %d", firmwareType, VERSION);
 
     // Initialising the UI will init the display too.
     display.init();
@@ -137,9 +186,11 @@ void setup() {
     setupSensor();
 
     connectToWiFi();
-    
+
+    tryOTA();
 
     client.setServer("10.13.37.1", 1883);
+    client.setCallback(callback);
 
     Serial.println("Setup done");
 }
@@ -163,6 +214,7 @@ void reconnect() {
       delay(5000);
     }
   }
+  client.subscribe(otaTopic);
 }
 
 char msgBuf[50];
