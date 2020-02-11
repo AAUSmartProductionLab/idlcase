@@ -135,6 +135,7 @@ void setup() {
     button.onPressed(onPressed);
 
     Serial.println("Setup done");
+    Serial.println("jeg er version 12");
 }
 
 void reconnect() {
