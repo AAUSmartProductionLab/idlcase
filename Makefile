@@ -9,5 +9,8 @@ dash: dash/*.go
 
 .PHONY: playbook
 playbook: dash
-	docker run -w /project -e HOME=/project --rm -it -v $(ROOT_DIR)/ansible:/project \
-		ansible/ansible-runner ansible-playbook main.yml $(OPTIONS) -i inventory.yml
+	docker run -w /project -e HOME=/project --rm -it \
+		-v $(ROOT_DIR)/ansible:/project \
+		-v $(SSH_AUTH_SOCK):/ssh-agent \
+		-e SSH_AUTH_SOCK=/ssh-agent \
+		ansible/ansible-runner ansible-playbook main.yml $(OPTIONS)
