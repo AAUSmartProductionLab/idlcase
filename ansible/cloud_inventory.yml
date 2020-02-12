@@ -1,0 +1,6 @@
+all:
+  children:
+    cloud:
+      hosts:
+        167.172.33.203:
+          ansible_ssh_common_args: -o UserKnownHostsFile=known_hosts

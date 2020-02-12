@@ -1,0 +1,5 @@
+---
+- hosts: cloud
+  roles:
+    - { name: common, tags: common }
+    - { name: vpnserver, tags: vpnserver }

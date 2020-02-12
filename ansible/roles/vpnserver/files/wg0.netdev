@@ -1,0 +1,13 @@
+[NetDev]
+Name=wg0
+Kind=wireguard
+Description=Wireguard server endpoint
+
+[WireGuard]
+PrivateKey=WD33CK4eAlualCLw6NPqGTAfkQxV9PoNwGibl+luxGU=
+ListenPort=51820
+
+[WireGuardPeer]
+# Our first case - add more [WireGuardPeer's] if needed 
+PublicKey=mQ2ClWflJGVDGv0uUlyOoDZRZiXTMLF9LlEAdMm7+xI=
+AllowedIps=10.14.47.2/32
