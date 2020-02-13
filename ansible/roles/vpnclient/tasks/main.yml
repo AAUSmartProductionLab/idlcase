@@ -1,0 +1,27 @@
+---
+- name: trust wireguard repo keys
+  apt_key:
+    id: "{{ item }}"
+    keyserver: keyserver.ubuntu.com
+    state: present
+  loop:
+    - 648ACFD622F3D138
+    - 04EE7237B7D453EC
+
+- name: limit unstable
+  copy:
+    src: limit-unstable
+    dest: /etc/apt/preferences.d/limit-unstable
+
+- name: add debian unstable for wireguard
+  apt_repository: 
+    repo: 'deb http://deb.debian.org/debian/ unstable main' 
+    state: present 
+    filename: unstable
+    update_cache: yes
+
+- name: install wireguard
+  apt:
+    name: wireguard
+    state: present
+    force_apt_get: true
