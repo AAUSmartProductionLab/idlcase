@@ -9,5 +9,5 @@ ListenPort=51820
 
 [WireGuardPeer]
 # Our first case - add more [WireGuardPeer's] if needed 
-PublicKey=mQ2ClWflJGVDGv0uUlyOoDZRZiXTMLF9LlEAdMm7+xI=
-AllowedIps=10.14.47.2/32
+PublicKey=hrZmOT/Hpk2ahbDbENJo1RzH02Mutus8CbWmUPTCXSM=
+AllowedIPs=10.14.47.2/32
