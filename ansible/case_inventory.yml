@@ -2,9 +2,9 @@ all:
   children:
     case:
       hosts:
-        172.27.23.173:
+        10.14.47.2:
           ansible_user: pi
           ansible_become: yes
           ansible_ssh_private_key_file: id_rsa
-          ansible_ssh_common_args: -o UserKnownHostsFile=known_hosts
+          ansible_ssh_common_args: -o UserKnownHostsFile=known_hosts -F ssh_config
           ansible_python_interpreter: /usr/bin/python3
