@@ -34,7 +34,7 @@
     wireguardDevice
 #
 # Highly important todo: 
-# Should a new case be introduces - this will not cut it
+# Should a new case be introduced - this will not cut it
 # we need a way for ansible to manage ip adresses
 #
 - name: install wireguard network configuration
@@ -49,3 +49,35 @@
     name: systemd-networkd.service
     state: restarted
   when: wireguardDevice.changed == True or wireguardNetwork.changed == True
+
+- name: ensure ufw is installed
+  apt:
+    name: ufw
+    state: present
+    force_apt_get: true
+
+- name: "ufw: drop everything incoming"
+  ufw:
+    direction: incoming
+    default: reject
+
+- name: "ufw: accept everything outgoing"
+  ufw:
+    direction: outgoing
+    default: allow
+
+- name: "ufw: allow everything on wg0"
+  ufw:
+    direction: in
+    interface: wg0
+    rule: allow
+
+- name: "ufw: allow everything on wlan0"
+  ufw:
+    direction: in
+    interface: wlan0
+    rule: allow
+
+- name: "ufw: enable ufw"
+  ufw:
+    state: enabled
