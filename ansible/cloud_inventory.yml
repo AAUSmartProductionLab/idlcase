@@ -2,5 +2,7 @@ all:
   children:
     cloud:
       hosts:
-        167.172.33.203:
+        130.225.57.82:
+          ansible_user: ansible
+          ansible_become: yes
           ansible_ssh_common_args: -o UserKnownHostsFile=known_hosts
