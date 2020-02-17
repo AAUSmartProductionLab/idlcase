@@ -17,27 +17,12 @@ type Subscription struct {
 	// usually a wildcard, matching multiple sensors
 	Topic    string
 	Handlers []Handler
-
-	client *mqtt.Client
 }
 
 // Run subscribes to topic and handles data
 func (s *Subscription) Run() error {
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://127.0.0.1:1883")
-	opts.SetClientID("dash")
-	opts.SetDefaultPublishHandler(s.handleMessage)
-
-	c := mqtt.NewClient(opts)
-	s.client = &c
-
-	// connect - wait - if error stop
-	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		return fmt.Errorf("unable to connect to mqtt broker: %w", token.Error())
-	}
-
 	// subscribe - wait - if error stop
-	if token := c.Subscribe(s.Topic, 0, nil); token.Wait() && token.Error() != nil {
+	if token := client.Subscribe(s.Topic, 0, s.handleMessage); token.Wait() && token.Error() != nil {
 		return fmt.Errorf("unable to subscribe to topic: %w", token.Error())
 	}
 

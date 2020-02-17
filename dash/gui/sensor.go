@@ -33,6 +33,7 @@ type DisplayMessage struct {
 	color *color.Color
 }
 
+// Init does various setting up of the sensor widget
 func (s *Sensor) Init() {
 	s.metrics = make([]string, 0)
 	s.lastMessages = make(map[string]*DisplayMessage)

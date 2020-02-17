@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+TYPE=$(basename $(pwd))
+# Fetch current version
+CURRENTVERSION=`curl -s 172.27.23.173/db/${TYPE} | jq ."version"`
+NEXTVERSION=$((CURRENTVERSION+1))
+
+# Save "src/version.h" with an incremented version number
+echo "#define VERSION ${NEXTVERSION}" > src/version.h

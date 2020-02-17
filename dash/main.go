@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"bitbucket.org/ragroup/idlcase/dash/fota"
@@ -11,6 +12,27 @@ import (
 )
 
 func main() {
+	// we start off by connecting to MQTT
+	err := transport.Connect()
+	if err != nil {
+		panic(fmt.Sprintf("unable to connect to MQTT: %s", err))
+	}
+
+	// fota is our over-the-air update manager
+	// Its just a webserver with a few endpoints
+	fota := fota.Webserver{PublishFirmware: transport.PublishNoPayload}
+	err = fota.Setup()
+	if err != nil {
+		panic(err)
+	}
+
+	// run ota in its own routine
+	go func() {
+		err := fota.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	store, err := storage.NewStore()
 	if err != nil {
