@@ -1,0 +1,50 @@
+---
+- name: create directory for traefik download
+  file:
+    path: /home/ansible/traefik
+    state: directory
+
+- name: download traefik
+  unarchive:
+    src: https://github.com/containous/traefik/releases/download/v2.1.4/traefik_v2.1.4_linux_amd64.tar.gz
+    remote_src: true
+    dest: /home/ansible/traefik
+  register: traefikBinary
+
+- name: install traefik when downloaded 
+  copy:
+    src: /home/ansible/traefik/traefik
+    dest: /usr/bin
+    remote_src: true
+    mode: ugo+rx
+  when: traefikBinary.changed
+
+- name: add traefik configuration
+  copy:
+    src: traefik.yml
+    dest: /etc/traefik.yml
+  register: traefikConfiguration
+
+- name: add traefik sites configuration
+  copy:
+    src: traefik_sites.yml
+    dest: /etc/traefik_sites.yml
+  register: traefikSites
+
+- name: install traefik service
+  copy:
+    src: traefik.service
+    dest: /etc/systemd/system/traefik.service
+
+- name: ensure traefik is running and enabled
+  service:
+    name: traefik.service
+    state: started
+    enabled: true
+    daemon-reload: true
+
+- name: restart traefik on configuration change
+  service:
+    name: traefik.service
+    state: restarted
+  when: traefikConfiguration.changed == True or traefikSites.changed == True
