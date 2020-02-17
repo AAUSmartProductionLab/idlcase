@@ -5,6 +5,12 @@
     state: present
     force_apt_get: true
 
+- name: install mosquitto clients
+  apt:
+    name: mosquitto-clients
+    state: present
+    force_apt_get: true
+
 - name: enable and start mosquitto
   service:
     name: mosquitto

@@ -31,7 +31,7 @@ esp32 devices and sensors
 ## MQTT namespaces and Datatypes
 Two high-level namespaces exist at the moment, `idl` and `idlota`
 
-### `/idl` topics
+### /idl topics
 Used for incoming events and metrics, `dash` assumes data is metric by default, but if the last part of the topic is `/event`, a special `Event` type is used which is stored a bit different compared to regular time-series data.
 
 Examples of Metric topics and their payloads:
@@ -45,5 +45,5 @@ idl/C4B3CC/pressure         {"value": 992.548035, "unit":"hPa"}
 idl/C4B3CC/humidity         {"value": 31.458008, "unit":"%RH"}
 ```
 
-### `idlota` topics
+### /idlota topics
 These topics are used to announce firmware updates to running devices. There is no payload and publishes to this topic makes sure interested devices check the OTA service for updates.
