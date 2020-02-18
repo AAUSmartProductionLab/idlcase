@@ -18,3 +18,9 @@
     name: systemd-timesyncd
     state: restarted
   when: timesyncdconf.changed
+  
+- name: ensure jq is installed
+  apt:
+    name: jq
+    state: present
+    force_apt_get: true

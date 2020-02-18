@@ -5,5 +5,5 @@ all:
         130.225.57.82:
           ansible_user: ansible
           ansible_become: yes
-          ansible_ssh_common_args: -o UserKnownHostsFile=known_hosts
+          ansible_ssh_common_args: -o UserKnownHostsFile=/known_hosts
           ansible_python_interpreter: /usr/bin/python3
