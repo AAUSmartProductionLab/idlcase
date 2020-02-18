@@ -1,0 +1,21 @@
+[Unit]
+Description=Traefik
+Documentation=https://docs.traefik.io
+After=network-online.target
+AssertFileIsExecutable=/usr/bin/traefik
+
+[Service]
+DynamicUser=yes
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+Type=notify
+ExecStart=/usr/bin/traefik --configFile=/etc/traefik.yml
+Restart=always
+WatchdogSec=1s
+
+# This creates a /var/lib/traefik directory which is only read and writable by traefik
+# here we store acme certificates
+StateDirectory=traefik
+
+[Install]
+WantedBy=multi-user.target

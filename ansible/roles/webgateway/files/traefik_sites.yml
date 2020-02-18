@@ -1,0 +1,29 @@
+http:
+  routers:
+    first-case-grafana:
+      rule: "Host(`ifnidl.hopto.org`)"
+      service: first-case-grafana
+      tls:
+        certResolver: sample
+    redirecttohttps:
+      entryPoints: 
+        - web
+      rule: "HostRegexp(`{host:.+}`)"
+      service: noop
+      middlewares: 
+        - httpsredirect
+
+  services:
+    noop:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:80/
+    first-case-grafana:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.2:3000/"
+
+  middlewares:
+    httpsredirect:
+      redirectScheme:
+        scheme: https

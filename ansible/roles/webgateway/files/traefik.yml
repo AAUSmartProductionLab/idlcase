@@ -1,0 +1,21 @@
+api:
+  dashboard: true
+  insecure: true
+ping: {}
+providers:
+  file:
+    filename: /etc/traefik_sites.yml
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  sample:
+    acme:
+      email: kman@mp.aau.dk
+      storage: /var/lib/traefik/acme.json
+      httpChallenge:
+        # used during the challenge
+        entryPoint: web

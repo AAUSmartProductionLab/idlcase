@@ -1,0 +1,30 @@
+---
+- name: add wireguard repository
+  apt_repository:
+    repo: ppa:wireguard/wireguard
+
+- name: install wireguard
+  apt:
+    name: wireguard
+    state: present
+    force_apt_get: true
+
+- name: install wireguard device
+  copy:
+    src: wg0.netdev
+    dest: /etc/systemd/network
+  register:
+    wireguardDevice
+
+- name: install wireguard network configuration
+  copy:
+    src: wg0.network
+    dest: /etc/systemd/network
+  register:
+    wireguardNetwork
+
+- name: restart networkd when changed
+  service:
+    name: systemd-networkd.service
+    state: restarted
+  when: wireguardDevice.changed == True or wireguardNetwork.changed == True

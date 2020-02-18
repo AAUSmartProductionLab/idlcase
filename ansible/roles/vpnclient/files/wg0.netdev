@@ -1,0 +1,13 @@
+[NetDev]
+Name=wg0
+Kind=wireguard
+Description=Wireguard server endpoint
+
+[WireGuard]
+PrivateKey=MJzyvhOIv2qGEoxtm1nZ2HK2/6F8s1jluj1zC3BuZFY=
+
+[WireGuardPeer]
+PublicKey=lri3Kh7sBZATBpvumfbeKsis781JVEswuIPQP4pj12o=
+AllowedIPs=10.14.47.1/32
+Endpoint=130.225.57.82:51820
+PersistentKeepalive=30

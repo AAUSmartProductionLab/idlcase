@@ -1,7 +1,16 @@
 #!/bin/bash -ex
+
+# Raspberry pi target
+TARGET=10.14.47.2
+
+# Type of firmware, e.g. espButton or espBME280
 TYPE=$(basename $(pwd))
+
+# Access VPN network using artifacts normally used by ansible
+CURLCMD=`echo -n "curl --fail -s ${TARGET}/db/${TYPE} | jq .\"version\""`
+CURRENTVERSION=`ssh -F ../ssh_config metric-log01 ${CURLCMD}`
+
 # Fetch current version
-CURRENTVERSION=`curl -s 172.27.23.173/db/${TYPE} | jq ."version"`
 NEXTVERSION=$((CURRENTVERSION+1))
 
 # Save "src/version.h" with an incremented version number
