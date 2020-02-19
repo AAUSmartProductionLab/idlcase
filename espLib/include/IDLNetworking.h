@@ -38,11 +38,15 @@ private:
     bool wifiPortal(int timeout = 300); /* default 5 minutes*/
     void readFileSystem();
     void writeFileSystem();
-    void PSCallback(char* toppic, byte* payload, unsigned int length);
-    
-    static bool shouldSaveConfig;
-    static void saveConfigCallback() {shouldSaveConfig = true; }
 
+    
+
+    void PSCallback(char* toppic, byte* payload, unsigned int length);
+    bool shouldSaveConfig;
+    void saveConfigCallback() {shouldSaveConfig = true; }
+
+    
+    
     char deviceId[24];
     char MQTTServer[40];
     char MQTTPort[6] = "1883";
@@ -64,6 +68,8 @@ private:
     // every time a new firmware is released, existing esp devices
     // will check this type and version number to see if they need updating
     esp32FOTA fota = esp32FOTA(String(deviceType), VERSION);
+
+    void tryOTA();
 
 
 public:

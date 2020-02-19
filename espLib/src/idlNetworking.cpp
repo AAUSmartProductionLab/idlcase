@@ -11,7 +11,41 @@ IDLNetworking::IDLNetworking(const char *deviceType){
     wifiPortal();
     writeFileSystem();
 
+    PSClient.setServer(MQTTServer, String(MQTTPort).toInt());
+    PSClient.setCallback([this] (char* topic, byte* payload, unsigned int length){ this->PSCallback(topic, payload, length);});
+
+    
+
 }
+
+/**************************************************************************/
+// check the web server if there's a new update. This is done at boot and 
+// whenever a new firmware is announced over MQTT
+void IDLNetworking::tryOTA() {
+  fota.checkURL = otaMeta;
+
+  bool updatedNeeded = fota.execHTTPcheck();
+  if (updatedNeeded) {
+    fota.execOTA();
+  }
+}
+
+void IDLNetworking::PSCallback(char* topic, byte* payload, unsigned int length) {
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i = 0; i < length; i++) {
+        Serial.print((char)payload[i]);
+    }
+    Serial.println();
+    
+    // We will just assume any received message is a request for OTA updates
+    // FIXME
+    tryOTA();
+}
+
+
+
 
 
 void IDLNetworking::readFileSystem(){
@@ -63,27 +97,25 @@ void IDLNetworking::readFileSystem(){
 void IDLNetworking::writeFileSystem(){
 
     //save the custom parameters to FS
-    if (shouldSaveConfig) {
-        Serial.println("saving config");
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject& json = jsonBuffer.createObject();
-        json["MQTTServer"] = MQTTServer;
-        json["MQTTPort"] = MQTTPort;
+    Serial.println("saving config");
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.createObject();
+    json["MQTTServer"] = MQTTServer;
+    json["MQTTPort"] = MQTTPort;
 
-        json["ip"] = WiFi.localIP().toString();
-        json["gateway"] = WiFi.gatewayIP().toString();
-        json["subnet"] = WiFi.subnetMask().toString();
+    json["ip"] = WiFi.localIP().toString();
+    json["gateway"] = WiFi.gatewayIP().toString();
+    json["subnet"] = WiFi.subnetMask().toString();
 
-        File configFile = SPIFFS.open("/config.json", "w");
-        if (!configFile) {
-        Serial.println("failed to open config file for writing");
-        }
-
-        json.prettyPrintTo(Serial);
-        json.printTo(configFile);
-        configFile.close();
-        //end save
+    File configFile = SPIFFS.open("/config.json", "w");
+    if (!configFile) {
+    Serial.println("failed to open config file for writing");
     }
+
+    json.prettyPrintTo(Serial);
+    json.printTo(configFile);
+    configFile.close();
+    //end save
 }
 
 
@@ -98,10 +130,9 @@ bool IDLNetworking::wifiPortal(int timeout){
     //Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
     
-    // init save flag to false 
-    shouldSaveConfig = false;
-    //set config save notify callback
-    wifiManager.setSaveConfigCallback(saveConfigCallback);
+    
+     //set config save notify callback
+    wifiManager.setSaveConfigCallback([this]{ this->saveConfigCallback();});
 
 
     //add all your parameters here
@@ -138,6 +169,8 @@ bool IDLNetworking::wifiPortal(int timeout){
         Serial.println(WiFi.localIP());
         Serial.println(WiFi.gatewayIP());
         Serial.println(WiFi.subnetMask());
+
+        writeFileSystem();
     }
 
 
@@ -158,7 +191,7 @@ void IDLNetworking::mqttConnect() {
 
         // announce the toppic on serial for debug
         char announcement[128];
-        sprintf(announcement,"Publishing on MQTT toppic: %s:%s/%s\0", MQTTServer, MQTTPort, mqtt_out_toppic);
+        sprintf(announcement,"Publishing on MQTT toppic: %s:%s/%s", MQTTServer, MQTTPort, mqtt_out_toppic);
         Serial.println(announcement);
         sprintf(announcement, "Subscribing on MQTT toppic: %s", otaTopic);
         Serial.println(announcement);
