@@ -36,11 +36,14 @@ const char DeviceType[] = "rfidReader";
 #include "SSD1306Wire.h"        
 
 /***************************************************************************/
+// Industrial Data Logger networking implementation.
+#include <IDLNetworking.h>
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
 
-
+IDLNetworking idlNetworking = IDLNetworking("rfidReader");
 /*=========================================================================*/
 // RFID reader instance
 MFRC522 mfrc522(CS_PIN,RST_PIN);
@@ -61,7 +64,7 @@ void displayLoop() {
       display.drawString(0, 20, "Connecting...");
     } else {
       display.setFont(ArialMT_Plain_24);
-      display.drawString(0, 0, deviceId);
+      display.drawString(0, 0, "deviceId");
       display.setFont(ArialMT_Plain_10);
       display.drawString(0, 25, WiFi.localIP().toString());
     }
@@ -73,6 +76,7 @@ void displayLoop() {
 void setup(){
     Serial.begin(19200);
  
+    //idlNetworking.reset();
 
     SPI.begin();
     mfrc522.PCD_Init();
@@ -99,11 +103,8 @@ void setup(){
 
 
 void loop() {
-  if (!PSClient.connected()) {
-    reconnect();
-  }
 
-  PSClient.loop();
+  idlNetworking.loop();
 
   displayLoop();
 
