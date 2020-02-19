@@ -204,5 +204,12 @@ void IDLNetworking::mqttConnect() {
 }
 
 void IDLNetworking::loop(){
-
+    if (!PSClient.connected()) {
+        reconnect();
+    }
+    PSClient.loop();
+    
+    if (WiFi.status() != WL_CONNECTED) {
+        wifiPortal();
+    }
 }
