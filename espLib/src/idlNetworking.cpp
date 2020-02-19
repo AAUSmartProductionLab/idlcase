@@ -205,11 +205,20 @@ void IDLNetworking::mqttConnect() {
 
 void IDLNetworking::loop(){
     if (!PSClient.connected()) {
-        reconnect();
+        mqttConnect();
     }
     PSClient.loop();
     
     if (WiFi.status() != WL_CONNECTED) {
         wifiPortal();
     }
+}
+
+void IDLNetworking::reset(){
+    WiFiManager wifiManager;
+    wifiManager.resetSettings();
+    SPIFFS.format();
+    sleep(5000);
+    ESP.restart();
+
 }

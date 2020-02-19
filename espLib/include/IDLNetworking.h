@@ -75,12 +75,13 @@ private:
 public:
     // constructor destructor
     IDLNetworking(const char *deviceType);
-    ~IDLNetworking();
+    //~IDLNetworking();
 
 
     // loop 
     void loop();
 
+    void reset();
 
 };
 
