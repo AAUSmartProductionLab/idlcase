@@ -50,13 +50,13 @@ private:
     char deviceId[24];
     char MQTTServer[40];
     char MQTTPort[6] = "1883";
-    char mqtt_out_toppic [64];
-    char mqtt_in_toppic [64];
+    char mqtt_out_toppic [64] = "";
+    char mqtt_in_toppic [64] = "";
 
-    char fwServer[128];
-    char versionString[16];
+    char fwServer[128] = "";
+    char versionString[16] = "";
     
-    const char *deviceType;
+    const char deviceType[24] = "";
 
     
         // where to listen for updates
@@ -83,6 +83,7 @@ public:
 
     void reset();
 
+    void begin();
 };
 
 #endif /* _IDLNETWORKING_H_ */

@@ -74,7 +74,7 @@ void displayLoop() {
 
 
 void setup(){
-    Serial.begin(19200);
+    Serial.begin(115200);
  
     //idlNetworking.reset();
 
@@ -96,7 +96,7 @@ void setup(){
 
     displayLoop(); 
 
-
+    idlNetworking.begin();
 
 
 }

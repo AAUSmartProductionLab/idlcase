@@ -3,6 +3,10 @@
 
 IDLNetworking::IDLNetworking(const char *deviceType){
     deviceType = deviceType;
+}
+
+void IDLNetworking::begin(){
+
     sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
     sprintf(mqtt_out_toppic, "idl/%s/event", deviceId);
     sprintf(versionString, "Version: %d", VERSION);
@@ -13,8 +17,6 @@ IDLNetworking::IDLNetworking(const char *deviceType){
 
     PSClient.setServer(MQTTServer, String(MQTTPort).toInt());
     PSClient.setCallback([this] (char* topic, byte* payload, unsigned int length){ this->PSCallback(topic, payload, length);});
-
-    
 
 }
 
@@ -47,11 +49,7 @@ void IDLNetworking::PSCallback(char* topic, byte* payload, unsigned int length) 
 
 
 
-
 void IDLNetworking::readFileSystem(){
-    //clean FS, for testing
-  //SPIFFS.format();
-
   //read configuration from FS json
   Serial.println("mounting FS...");
 
@@ -157,7 +155,9 @@ bool IDLNetworking::wifiPortal(int timeout){
     //and goes into a blocking loop awaiting configuration
     
     wifiManager.setTimeout(timeout);
-    wifiManager.startConfigPortal("CONFIGURE ME - " + *deviceId);
+    char buf[41];
+    sprintf(buf, "CONFIGURE ME - %s", deviceId);
+    wifiManager.startConfigPortal(buf);
 
     if (shouldSaveConfig){
         //read updated parameters. Might not have changed but it should be safe to update them again. 
@@ -218,7 +218,7 @@ void IDLNetworking::reset(){
     WiFiManager wifiManager;
     wifiManager.resetSettings();
     SPIFFS.format();
-    sleep(5000);
-    ESP.restart();
+    Serial.println("flash and wifimanager is reset. halting execution");
+    while (true){sleep(10000);}
 
 }
