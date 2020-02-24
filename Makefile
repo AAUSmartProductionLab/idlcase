@@ -1,11 +1,17 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
+UID:=$(shell id -u)
 clean:
 	rm -f ansible/dash dash/dash
 
-# This step should be dockerized at some point
 dash: dash/*.go
-	cd dash; GOARCH=arm go build -o ../ansible/dash-arm-build .
+	docker run -it --rm \
+		-v $(ROOT_DIR):/project \
+		-e GOPATH=/project/.go \
+		-e GOCACHE=/project/.go/cache \
+		-e GOARCH=arm \
+		-w /project/dash \
+		-u $(UID) \
+		golang:1.13.8 go build -o ../ansible/dash-arm-build .
 
 .PHONY: playbook
 playbook: dash
