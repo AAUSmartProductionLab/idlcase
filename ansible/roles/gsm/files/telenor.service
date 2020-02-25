@@ -1,0 +1,11 @@
+[Unit]
+Description=Setup telenor config
+Wants=dev-ttyUSB0.device
+After=dev-ttyUSB0.device
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo -ne \'AT^NDISDUP=1,1,"internet"\n\' > /dev/ttyUSB0'
+
+[Install]
+WantedBy=dev-ttyUSB0.device

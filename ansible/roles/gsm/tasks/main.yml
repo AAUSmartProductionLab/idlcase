@@ -1,13 +1,11 @@
 ---
-- name: make sure wvdial is installed
-  apt:
-    name: wvdial
-    state: present
-    force_apt_get: true
-
-- name: add wvdial configuration for Telenor
+- name: add telenor.service
   copy:
-    src: wvdial.conf
-    dest: /etc/wvdial.conf
+    src: telenor.service
+    dest: /etc/systemd/system/telenor.service
 
-# This should be set up as a service at some point 
+- name: add wwan0 device
+  copy:
+    src: wwan0.network
+    dest: /etc/systemd/network/wwan0.network
+    
