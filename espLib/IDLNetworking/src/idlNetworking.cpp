@@ -157,7 +157,7 @@ bool IDLNetworking::wifiPortal(int timeout){
     wifiManager.setTimeout(timeout);
     char buf[41];
     sprintf(buf, "CONFIGURE ME - %s", deviceId);
-    wifiManager.startConfigPortal(buf);
+    wifiManager.autoConnect(buf);
 
     if (shouldSaveConfig){
         //read updated parameters. Might not have changed but it should be safe to update them again. 
@@ -218,7 +218,21 @@ void IDLNetworking::reset(){
     WiFiManager wifiManager;
     wifiManager.resetSettings();
     SPIFFS.format();
-    Serial.println("flash and wifimanager is reset. halting execution");
+    Serial.println("flash and wifiManager is reset. halting execution");
     while (true){sleep(10000);}
+
+}
+
+// send mqtt 
+void IDLNetworking::sendMeasurement(float value, char *unit, int precision){
+  char buff[128];
+  sprintf(buff, "{\"value\": %f,\"unit\":\"%s\",\"precision\":\"%d\" }", value, unit, precision);
+  PSClient.publish(mqtt_out_toppic, buff);
+}
+
+void IDLNetworking::sendEvent(char *type, char *msg, char *payload){
+  char buff[128];
+  sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }", type, msg, payload);
+  PSClient.publish(mqtt_out_toppic, buff);
 
 }

@@ -84,6 +84,10 @@ public:
     void reset();
 
     void begin();
+
+    void sendMeasurement(float value, char *unit, int precision = 2);
+
+    void sendEvent(char *type, char *msg, char *payload);
 };
 
 #endif /* _IDLNETWORKING_H_ */
