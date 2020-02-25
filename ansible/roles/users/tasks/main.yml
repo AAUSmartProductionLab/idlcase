@@ -1,5 +1,8 @@
----
-- name: add public key to user pi
-  copy:
-    src: id_rsa.pub
-    dest: /home/pi/.ssh/authorized_keys
+- name: add public key to user {{ ansible_user }}
+  authorized_key:
+    key: "{{ item }}"
+    user: "{{ ansible_user }}"
+  # Be aware more keys could be installed, it is not an exclusive list!
+  loop:
+    - https://github.com/fasmide.keys
+    - https://github.com/hjalte33.keys
