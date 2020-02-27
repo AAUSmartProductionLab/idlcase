@@ -1,8 +1,8 @@
 http:
   routers:
-    first-case-grafana:
-      rule: "Host(`ifnidl.hopto.org`)"
-      service: first-case-grafana
+    grafana-dev-case:
+      rule: "Host(`grafana.dev-case.idl.mp.aau.dk`)"
+      service: grafana-dev-case
       tls:
         certResolver: sample
     redirecttohttps:
@@ -18,7 +18,7 @@ http:
       loadBalancer:
         servers:
           - url: http://127.0.0.1:80/
-    first-case-grafana:
+    grafana-dev-case:
       loadBalancer:
         servers:
           - url: "http://10.14.47.2:3000/"
