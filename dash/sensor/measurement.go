@@ -3,7 +3,7 @@ package sensor
 import "fmt"
 
 type Measurement struct {
-	PrecisionValue *int `json:"Precision"`
+	PrecisionValue *int `json:"precision"`
 	Value          float64
 	Unit           string
 }
