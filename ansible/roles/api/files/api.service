@@ -1,0 +1,9 @@
+[Unit]
+Description=IDL api for various tasks
+
+[Service]
+ExecStart=/home/pi/api
+DynamicUser=yes
+
+[Install]
+WantedBy=multi-user.target
