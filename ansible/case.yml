@@ -9,4 +9,3 @@
     - { name: grafana,    tags: grafana }
     - { name: mosquitto,  tags: mosquitto }
     - { name: gsm,        tags: gsm }
-    - { name: vpnclient,  tags: vpnclient }

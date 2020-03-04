@@ -1,0 +1,14 @@
+---
+- name: collect wireguard private key
+  shell: wg show wg0 private-key
+  register: private_key
+
+- name: collect wireguard public key
+  shell: wg show wg0 public-key
+  register: public_key
+
+- set_fact:
+    wg0:
+      public_key: "{{ public_key.stdout }}"
+      private_key: "{{ private_key.stdout }}"
+

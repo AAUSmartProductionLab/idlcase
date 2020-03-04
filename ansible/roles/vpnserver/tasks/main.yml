@@ -10,9 +10,9 @@
     force_apt_get: true
 
 - name: install wireguard device
-  copy:
-    src: wg0.netdev
-    dest: /etc/systemd/network
+  template:
+    src: wg0.netdev.j2
+    dest: /etc/systemd/network/wg0.netdev
   register:
     wireguardDevice
 
@@ -23,8 +23,8 @@
   register:
     wireguardNetwork
 
-- name: restart networkd when changed
-  service:
-    name: systemd-networkd.service
-    state: restarted
-  when: wireguardDevice.changed == True or wireguardNetwork.changed == True
+# - name: restart networkd when changed
+#   service:
+#     name: systemd-networkd.service
+#     state: restarted
+#   when: wireguardDevice.changed == True or wireguardNetwork.changed == True

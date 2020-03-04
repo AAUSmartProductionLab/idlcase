@@ -1,5 +1,6 @@
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 UID:=$(shell id -u)
+PLAYBOOK?=main.yml
 clean:
 	rm -f ansible/dash dash/dash
 
@@ -20,4 +21,4 @@ playbook: dash
 		-v $(ROOT_DIR)/known_hosts:/known_hosts \
 		-v $(SSH_AUTH_SOCK):/ssh-agent \
 		-e SSH_AUTH_SOCK=/ssh-agent \
-		ansible/ansible-runner ansible-playbook main.yml $(OPTIONS)
+		ansible/ansible-runner ansible-playbook $(PLAYBOOK) -i inventory.yml 
