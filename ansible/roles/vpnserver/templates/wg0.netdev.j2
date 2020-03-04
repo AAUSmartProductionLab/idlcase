@@ -7,8 +7,8 @@ Description=Wireguard server endpoint
 PrivateKey={{ wg0.private_key }}
 ListenPort=51820
 
-{% for peer in peers %}
+{% for peer in groups['case'] %}
 [WireGuardPeer]
-PublicKey={{ peer.public_key }}
-AllowedIPs={{ peer.ip_address }}/32
+PublicKey={{ hostvars[peer].wg0.public_key }}
+AllowedIPs={{ hostvars[peer].wg0_ip_address }}/32
 {% endfor %}

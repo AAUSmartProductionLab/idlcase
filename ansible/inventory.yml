@@ -14,3 +14,4 @@ all:
           ansible_become: yes
           ansible_ssh_common_args: -F ssh_config
           ansible_python_interpreter: /usr/bin/python3
+          wg0_ip_address: "10.14.47.2"
