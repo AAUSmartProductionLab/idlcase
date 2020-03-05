@@ -5,6 +5,13 @@ http:
       service: grafana-dev-case
       tls:
         certResolver: sample
+    api-dev-case:
+      rule: "Host(`api.dev-case.idl.mp.aau.dk`)"
+      service: api-dev-case
+      tls:
+        certResolver: sample
+      middlewares:
+        - api-auth
     redirecttohttps:
       entryPoints: 
         - web
@@ -22,8 +29,16 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.14.47.2:3000/"
+    api-dev-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.2:9090/"
 
   middlewares:
     httpsredirect:
       redirectScheme:
         scheme: https
+    api-auth:
+      basicAuth:
+        users:
+          - "apiuser:$2y$05$.KY1FbgZLgLxN.BIdyWuk.Y08CkBJciyMA9aBUFAk6LCwr2eFL22O"

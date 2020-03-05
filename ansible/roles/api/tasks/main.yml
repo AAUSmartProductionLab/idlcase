@@ -1,0 +1,21 @@
+---
+- name: Add api service
+  copy:
+    src: api.service
+    dest: /etc/systemd/system/api.service
+  register: apiservice
+
+- name: upload api binary
+  copy:
+    src: api-arm-build
+    dest: /home/pi/api
+    mode: o+rx
+  register: apibinary
+
+- name: restart api.service
+  service:
+    name: api.service
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  when: apibinary.changed or apiservice.changed
