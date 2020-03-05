@@ -1,0 +1,13 @@
+[NetDev]
+Name=wg0
+Kind=wireguard
+Description=Wireguard server endpoint
+
+[WireGuard]
+PrivateKey={{ wg0.private_key }}
+
+[WireGuardPeer]
+PublicKey={{ hostvars[groups['cloud'][0]].wg0.public_key }}
+AllowedIPs=10.14.47.1/32
+Endpoint={{ hostvars[groups['cloud'][0]].ansible_default_ipv4.address }}:51820
+PersistentKeepalive=30

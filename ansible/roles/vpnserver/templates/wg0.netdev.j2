@@ -1,0 +1,14 @@
+[NetDev]
+Name=wg0
+Kind=wireguard
+Description=Wireguard server endpoint
+
+[WireGuard]
+PrivateKey={{ wg0.private_key }}
+ListenPort=51820
+
+{% for peer in groups['case'] %}
+[WireGuardPeer]
+PublicKey={{ hostvars[peer].wg0.public_key }}
+AllowedIPs={{ hostvars[peer].wg0_ip_address }}/32
+{% endfor %}

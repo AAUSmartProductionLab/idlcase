@@ -27,20 +27,16 @@
     force_apt_get: true
 
 - name: install wireguard device
-  copy:
-    src: wg0.netdev
-    dest: /etc/systemd/network
+  template:
+    src: wg0.netdev.j2
+    dest: /etc/systemd/network/wg0.netdev
   register:
     wireguardDevice
-#
-# Highly important todo: 
-# Should a new case be introduced - this will not cut it
-# we need a way for ansible to manage ip adresses
-#
+    
 - name: install wireguard network configuration
-  copy:
-    src: wg0.network
-    dest: /etc/systemd/network
+  template:
+    src: wg0.network.j2
+    dest: /etc/systemd/network/wg0.network
   register:
     wireguardNetwork
 
