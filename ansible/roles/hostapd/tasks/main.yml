@@ -1,14 +1,13 @@
 ---
 - name: install hostapd
   apt:
-    # rasbian does not have aptitude
-    force_apt_get: true
     name: hostapd
     state: present
+    force_apt_get: true
 
 - name: configure hostapd
-  copy:
-    src: hostapd.conf
+  template:
+    src: hostapd.conf.j2
     dest: /etc/hostapd/hostapd.conf
   register: hostapdconf
 
@@ -39,6 +38,7 @@
   apt:
     name: ifupdown
     state: absent
+    force_apt_get: true
 
 # dhcpcd conflicts with networkd
 - name: disable dhcpcd
@@ -57,6 +57,7 @@
   apt:
     name: dnsmasq
     state: present
+    force_apt_get: true
 
 - name: configure dnsmasq
   copy:
