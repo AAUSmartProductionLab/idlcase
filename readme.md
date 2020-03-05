@@ -47,3 +47,7 @@ idl/C4B3CC/humidity         {"value": 31.458008, "unit":"%RH"}
 
 ### /idlota topics
 These topics are used to announce firmware updates to running devices. There is no payload and publishes to this topic makes sure interested devices check the OTA service for updates.
+
+## Legal
+Copyright 2020 Aalborg University
+MIT License
