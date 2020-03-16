@@ -10,10 +10,10 @@ country_code=DK
 ieee80211n=1
 wmm_enabled=1
 
-ssid=idlcase
+ssid={{ hostapd_ssid }}
 # 1=wpa, 2=wep, 3=both
 auth_algs=1
 wpa=2
 wpa_key_mgmt=WPA-PSK  
 rsn_pairwise=CCMP
-wpa_passphrase=Aalborg9000Robotlab
+wpa_passphrase={{ hostapd_wpa_password }}
