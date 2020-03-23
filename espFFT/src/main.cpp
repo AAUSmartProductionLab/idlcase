@@ -7,11 +7,12 @@ const i2s_port_t I2S_PORT = I2S_NUM_0;
 const int BLOCK_SIZE = 1024;
 
 const double samplingFrequency = 44100;
-const int micMaxFreq = 15000;
-const float freqRes = samplingFrequency / BLOCK_SIZE;
-const int maxBins = 64;// micMaxFreq / freqRes;
+const int maxMicFreq = 15000;
+const int nBins = 32;
 
-double bins[maxBins];
+const float binSize = samplingFrequency / BLOCK_SIZE;
+const int maxBins = maxMicFreq / binSize;
+double bins[nBins];
 
 double vReal[BLOCK_SIZE];
 double vImag[BLOCK_SIZE];
@@ -110,6 +111,13 @@ void PrintVector(double *vData, uint32_t bufferSize, uint8_t scaleType) {
   Serial.println();
 }
 
+
+// return small values
+short dithernoise() { 
+  return short(esp_random() >> 15);
+}
+
+
 void loop() {
   // Read multiple samples at once and calculate the sound pressure
 
@@ -121,29 +129,31 @@ void loop() {
                BLOCK_SIZE,     // the doc says bytes, but its elements.
                &ps,
                portMAX_DELAY); // no timeout
+  
 
   for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-    int dither = random(-0x7FFF,0x8FFF);
     // discard the least significant bits to make it from 32 bit intiger to 16 bit resolution
-    vReal[i] = short((samples[i] + dither) >> 16); 
+    // But also add some dithering noise to help with downsampling
+    vReal[i] = short((samples[i] + dithernoise()) >> 16); 
     vImag[i] = 0.0; // Imaginary part must be zeroed in case of looping to avoid
                     // wrong calculations and overflows
   }
-  
+
   FFT.DCRemoval();
   FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
   FFT.Compute(FFT_FORWARD);
   FFT.ComplexToMagnitude(); // magintude is half the size 
 
   // init the bins with zeros
-  for (int i = 0; i < maxBins; i++) {
+  for (int i = 0; i < nBins; i++) {
     bins[i] = 0;
   }
  
   int index = 0;
 
-  for (int i = 2; i < BLOCK_SIZE/2; i++) {   
-      index = i / (BLOCK_SIZE/2/maxBins); // should give 64 bins
+  for (int i = 2; i < maxBins; i++) {   
+      index = i / (maxBins/nBins);
+
       bins[index] = max(bins[index], log2(vReal[i])); 
   }
 
@@ -152,7 +162,7 @@ void loop() {
   
   //PrintVector(vReal,BLOCK_SIZE,SCL_FREQUENCY);
 
-  for (int i = 0; i < maxBins; i++) {
+  for (int i = 0; i < nBins; i++) {
     Serial.println (String(bins[i]));
   }
  
@@ -161,4 +171,8 @@ void loop() {
   // PrintVector(vReal, (1024 >> 1), SCL_FREQUENCY);
   double x = FFT.MajorPeak();
   Serial.println(x, 6); // Print out what frequency is the most dominant.
+
 }
+
+
+
