@@ -1,5 +1,3 @@
-#include <Ticker.h>
-#include <WiFi.h>
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 
@@ -18,15 +16,8 @@ double vReal[BLOCK_SIZE];
 double vImag[BLOCK_SIZE];
 int32_t samples[BLOCK_SIZE];
 
-
-
-
-arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE, samplingFrequency); /* Create FFT object */
-
-
-// Connecting to the Internet
-const char *ssid = "idlcase";
-const char *password = "Aalborg9000Robotlab";
+arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
+                            samplingFrequency); /* Create FFT object */
 
 void setupMic() {
   Serial.println("Configuring I2S...");
@@ -37,12 +28,12 @@ void setupMic() {
   const i2s_config_t i2s_config = {
       .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX), // Receive, not transfer
       .sample_rate = samplingFrequency,
-      .bits_per_sample = I2S_BITS_PER_SAMPLE_24BIT, 
-      .channel_format =  I2S_CHANNEL_FMT_ONLY_LEFT,
+      .bits_per_sample = I2S_BITS_PER_SAMPLE_24BIT,
+      .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
       .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
       .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, // Interrupt level 1
       .dma_buf_count = 4,                       // number of buffers
-      .dma_buf_len = BLOCK_SIZE,                 // samples per buffer
+      .dma_buf_len = BLOCK_SIZE,                // samples per buffer
   };
 
   // The pin config as per the setup
@@ -71,70 +62,36 @@ void setupMic() {
 }
 
 void setup() {
-
   Serial.begin(1000000);
-
-  delay(1000);
-  Serial.println("Setting up mic");
   setupMic();
-  Serial.println("Mic setup completed");
-
-  delay(1000);
 }
 
-#define SCL_INDEX 0x00
-#define SCL_TIME 0x01
-#define SCL_FREQUENCY 0x02
-#define SCL_PLOT 0x03
-
-void PrintVector(double *vData, uint32_t bufferSize, uint8_t scaleType) {
-  for (uint16_t i = 0; i < bufferSize; i++) {
-    double abscissa;
-    /* Print abscissa value */
-    switch (scaleType) {
-    case SCL_INDEX:
-      abscissa = (i * 1.0);
-      break;
-    case SCL_TIME:
-      abscissa = ((i * 1.0) / samplingFrequency);
-      break;
-    case SCL_FREQUENCY:
-      abscissa = ((i * 1.0 * samplingFrequency) / 1024);
-      break;
-    }
-    Serial.print(abscissa, 6);
-    if (scaleType == SCL_FREQUENCY)
-      Serial.print("Hz");
-    Serial.print(" ");
-    Serial.println(vData[i], 4);
-  }
-  Serial.println();
+// Return light triangular shaped dithernoise for 
+// 32bit int that needs to be downsampled to 16 bit.
+int32_t dithernoise() { 
+  int32_t x1 = esp_random();
+  int32_t x2 = esp_random();
+  int32_t triangleRand = ((x1>>15) + (x2>>15)) / 2;
+  return triangleRand;
 }
-
-
-// return small values
-short dithernoise() { 
-  return short(esp_random() >> 15);
-}
-
 
 void loop() {
   // Read multiple samples at once and calculate the sound pressure
 
+  // annoying variable needed to read i2s. It not used for anything.
   size_t ps;
 
-  int esp_err =
-      i2s_read(I2S_PORT,
-               &samples,
-               BLOCK_SIZE,     // the doc says bytes, but its elements.
-               &ps,
-               portMAX_DELAY); // no timeout
-  
+  // Read the sound data from i2s port
+  int esp_err = i2s_read(I2S_PORT, &samples,
+                         BLOCK_SIZE, // the doc says bytes, but its elements.
+                         &ps,
+                         portMAX_DELAY); // no timeout
 
+  // Prepare the spamles for FFT
+  // Discard the least significant bits to make it from 32 bit to 16 bit.
+  // Also add some dithering noise to help with downsampling
   for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-    // discard the least significant bits to make it from 32 bit intiger to 16 bit resolution
-    // But also add some dithering noise to help with downsampling
-    vReal[i] = short((samples[i] + dithernoise()) >> 16); 
+    vReal[i] = short((samples[i] + dithernoise()) >> 16);
     vImag[i] = 0.0; // Imaginary part must be zeroed in case of looping to avoid
                     // wrong calculations and overflows
   }
@@ -142,37 +99,33 @@ void loop() {
   FFT.DCRemoval();
   FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
   FFT.Compute(FFT_FORWARD);
-  FFT.ComplexToMagnitude(); // magintude is half the size 
+  FFT.ComplexToMagnitude(); // magintude is half the size
 
   // init the bins with zeros
   for (int i = 0; i < nBins; i++) {
     bins[i] = 0;
   }
- 
+
   int index = 0;
-
-  for (int i = 2; i < maxBins; i++) {   
-      index = i / (maxBins/nBins);
-
-      bins[index] = max(bins[index], log2(vReal[i])); 
+  for (int i = 2; i <= maxBins; i++) {
+    index = i / (maxBins / nBins);
+    bins[index] = max(bins[index], log2(vReal[i]));
   }
 
-  Serial.print(char(27));   //Print "esc"
+  Serial.print(char(27)); // Print "esc"
   Serial.print("[2J");
-  
-  //PrintVector(vReal,BLOCK_SIZE,SCL_FREQUENCY);
+
+  // PrintVector(vReal,BLOCK_SIZE,SCL_FREQUENCY);
 
   for (int i = 0; i < nBins; i++) {
-    Serial.println (String(bins[i]));
+    Serial.println(String(bins[i]));
   }
- 
+
   Serial.println();
 
   // PrintVector(vReal, (1024 >> 1), SCL_FREQUENCY);
   double x = FFT.MajorPeak();
   Serial.println(x, 6); // Print out what frequency is the most dominant.
-
 }
 
-
-
+// abscissa = ((i * 1.0 * samplingFrequency) / 1024);
