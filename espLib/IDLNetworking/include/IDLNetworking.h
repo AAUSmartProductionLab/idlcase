@@ -55,7 +55,7 @@ private:
   // where to listen for updates
   const char *otaTopic = "idlota/" + *deviceType;
 
-  // where to check for updates
+  // where to check for updates 
   const char *otaMeta = "http://10.13.37.1/db/" + *deviceType;
 
   // every time a new firmware is released, existing esp devices
@@ -76,9 +76,11 @@ public:
 
   void begin();
 
-  void sendMeasurement(float value, char *unit, int precision = 2);
+  void sendMeasurement(char *kind, char *values);
 
   void sendEvent(char *type, char *msg, char *payload);
+
+  void sendRaw(char *kind, JsonObject json);
 };
 
 #endif /* _IDLNETWORKING_H_ */

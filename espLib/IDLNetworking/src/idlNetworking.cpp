@@ -7,7 +7,6 @@ IDLNetworking::IDLNetworking(const char *deviceType) {
 void IDLNetworking::begin() {
 
   sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
-  sprintf(mqtt_out_toppic, "idl/%s/event", deviceId);
   sprintf(versionString, "Version: %d", VERSION);
 
   readFileSystem();
@@ -58,13 +57,14 @@ void IDLNetworking::readFileSystem() {
       File configFile = SPIFFS.open("/config.json", "r");
       if (configFile) {
         Serial.println("opened config file");
-        size_t size = configFile.size();
+        
         // Allocate a buffer to store contents of the file.
+        size_t size = configFile.size();
         std::unique_ptr<char[]> buf(new char[size]);
 
         configFile.readBytes(buf.get(), size);
         DynamicJsonBuffer jsonBuffer;
-        JsonObject &json = jsonBuffer.parseObject(buf.get());
+        JsonObject & json = jsonBuffer.parseObject(buf.get());
         json.printTo(Serial);
         if (json.success()) {
           Serial.println("\nparsed json");
@@ -114,16 +114,11 @@ void IDLNetworking::writeFileSystem() {
 
 bool IDLNetworking::wifiPortal(int timeout) {
   WiFiManagerParameter custom_text1(
-      "<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>MQTT "
-      "settings</b></p>");
-  WiFiManagerParameter customMQTTServer("server", "mqtt server", MQTTServer,
-                                        40);
+      "<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>MQTT settings</b></p>");
+  WiFiManagerParameter customMQTTServer("server", "mqtt server", MQTTServer, 40);
   WiFiManagerParameter customMQTTPort("port", "mqtt port", MQTTPort, 5);
-  WiFiManagerParameter custom_text2(
-      "<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>Firmware "
-      "settings</b></p>");
-  WiFiManagerParameter customFwServer("server", "Firmware Server", fwServer,
-                                      128);
+  WiFiManagerParameter custom_text2("<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>Firmware settings</b></p>");
+  WiFiManagerParameter customFwServer("server", "Firmware Server", fwServer, 128);
 
   // WiFiManager
   // Local intialization. Once its business is done, there is no need to keep it
@@ -188,11 +183,8 @@ void IDLNetworking::mqttConnect() {
     Serial.println("MQTT connected");
     PSClient.subscribe(otaTopic);
 
-    // announce the toppic on serial for debug
+    // announce the subscribe toppic on serial for debug
     char announcement[128];
-    sprintf(announcement, "Publishing on MQTT toppic: %s:%s/%s", MQTTServer,
-            MQTTPort, mqtt_out_toppic);
-    Serial.println(announcement);
     sprintf(announcement, "Subscribing on MQTT toppic: %s", otaTopic);
     Serial.println(announcement);
 
@@ -225,23 +217,40 @@ void IDLNetworking::reset() {
 }
 
 // send mqtt
-void IDLNetworking::sendMeasurement(float value, char *unit, int precision) {
+void IDLNetworking::sendMeasurement(char *kind, char *values, char *unit) {
+
   char buff[128];
   sprintf(buff, "{\"value\": %f,\"unit\":\"%s\",\"precision\":\"%d\" }", value,
           unit, precision);
   PSClient.publish(mqtt_out_toppic, buff);
+  
+  DynamicJsonBuffer jsonBuffer;
+
+  JsonObject& j_root = jsonBuffer.createObject();
+  j_root["type"] = "measurement";
+  JsonObject& j_values = j_root.createNestedObject("values");
+  for(int i = 0; i < sizeof(values); i++){
+    JsonObject& unit = j_values.createNestedObject(unit);
+  }
+  values["temp"] = 14.2;
+  weather["cond"] = "cloudy";
+  root.prettyPrintTo(Serial);
 }
 
-void IDLNetworking::sendEvent(char *type, char *msg, char *payload) {
+
+void IDLNetworking::sendEvent(char *kind, char *msg, char *payload) {
   char buff[128];
-  sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }", type,
-          msg, payload);
+  sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }",
+          type, msg, payload);
   PSClient.publish(mqtt_out_toppic, buff);
 }
 
-void IDLNetworking::sendMultiMeasurement(char *values, ) {
-  char buff[128];
-  sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }", type,
-          msg, payload);
-  PSClient.publish(mqtt_out_toppic, buff);
+void IDLNetworking::sendRaw(char *kind, JsonObject json){
+  sprintf(mqtt_out_toppic, "idlcase/%s/%s", kind, deviceId);
+  unsigned int length = json.measureLength();
+  PSClient.beginPublish(mqtt_out_toppic, length, false) ;
+  json.printTo(PSClient.write);
+
+
+
 }
