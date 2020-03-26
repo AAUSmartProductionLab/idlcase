@@ -221,18 +221,31 @@ void IDLNetworking::reset(){
     Serial.println("flash and wifiManager is reset. halting execution");
     while (true){sleep(10000);}
 
-}
+// // send mqtt
+// void IDLNetworking::sendMeasurement(char *kind, JsonObject values) {
 
-// send mqtt 
-void IDLNetworking::sendMeasurement(float value, char *unit, int precision){
-  char buff[128];
-  sprintf(buff, "{\"value\": %f,\"unit\":\"%s\",\"precision\":\"%d\" }", value, unit, precision);
-  PSClient.publish(mqtt_out_toppic, buff);
-}
+//   DynamicJsonBuffer jsonBuffer;
 
-void IDLNetworking::sendEvent(char *type, char *msg, char *payload){
-  char buff[128];
-  sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }", type, msg, payload);
-  PSClient.publish(mqtt_out_toppic, buff);
+//   JsonObject& j_root = jsonBuffer.createObject();
+//   j_root["type"] = "measurement";
+//   JsonObject& j_values = j_root.createNestedObject("values");
+//   for(int i = 0; i < sizeof(values); i++){
+//     JsonObject& unit = j_values.createNestedObject(unit);
+//   }
+// }
 
+
+// void IDLNetworking::sendEvent(char *kind, char *msg, char *payload) {
+//   char buff[128];
+//   sprintf(buff, "{\"type\":\"%s\",\"msg\":\"%s\",\"payload\":\"%s\" }",
+//           type, msg, payload);
+//   PSClient.publish(mqtt_out_toppic, buff);
+// }
+
+void IDLNetworking::sendRaw(char *kind, JsonObject json){
+  sprintf(mqtt_out_toppic, "idlcase/%s/%s", kind, deviceId);
+  unsigned int length = json.measureLength();
+  PSClient.beginPublish(mqtt_out_toppic, length, false) ;
+  json.printTo(PSClient);
+  PSClient.endPublish();
 }
