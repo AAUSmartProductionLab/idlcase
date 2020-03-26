@@ -85,9 +85,11 @@ public:
 
     void begin();
 
-    void sendMeasurement(float value, char *unit, int precision = 2);
+    // void sendMeasurement(float value, char *unit, int precision = 2);
 
-    void sendEvent(char *type, char *msg, char *payload);
+    // void sendEvent(char *type, char *msg, char *payload);
+
+    void sendRaw(char *kind, JsonObject json);
 };
 
 #endif /* _IDLNETWORKING_H_ */

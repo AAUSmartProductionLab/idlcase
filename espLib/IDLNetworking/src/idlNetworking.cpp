@@ -173,7 +173,7 @@ bool IDLNetworking::wifiPortal(int timeout){
         writeFileSystem();
     }
 
-
+  return true;
 }
 
 /***************************************************************************/
@@ -220,6 +220,16 @@ void IDLNetworking::reset(){
     SPIFFS.format();
     Serial.println("flash and wifiManager is reset. halting execution");
     while (true){sleep(10000);}
+}
+
+void IDLNetworking::sendRaw(char *kind, JsonObject json){
+  sprintf(mqtt_out_toppic, "idlcase/%s/%s", kind, deviceId);
+  unsigned int length = json.measureLength();
+  PSClient.beginPublish(mqtt_out_toppic, length, false) ;
+  json.printTo(PSClient);
+  PSClient.endPublish();
+}
+
 
 // // send mqtt
 // void IDLNetworking::sendMeasurement(char *kind, JsonObject values) {
@@ -242,10 +252,3 @@ void IDLNetworking::reset(){
 //   PSClient.publish(mqtt_out_toppic, buff);
 // }
 
-void IDLNetworking::sendRaw(char *kind, JsonObject json){
-  sprintf(mqtt_out_toppic, "idlcase/%s/%s", kind, deviceId);
-  unsigned int length = json.measureLength();
-  PSClient.beginPublish(mqtt_out_toppic, length, false) ;
-  json.printTo(PSClient);
-  PSClient.endPublish();
-}
