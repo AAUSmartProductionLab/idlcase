@@ -25,64 +25,62 @@
 #include <esp32fota.h>
 
 class IDLNetworking {
-private:
-  // create a wifi client to handle the mqtt traffic
-  WiFiClient espClient;
-  PubSubClient PSClient = PubSubClient(espClient);
+  private:
+    // create a wifi client to handle the mqtt traffic
+    WiFiClient espClient;
+    PubSubClient PSClient = PubSubClient(espClient);
 
-  // MQTT connection service function
-  void mqttConnect();
+    // MQTT connection service function
+    void mqttConnect();
 
-  bool wifiPortal(int timeout = 300); /* default 5 minutes*/
-  void readFileSystem();
-  void writeFileSystem();
+    bool wifiPortal(int timeout = 300); /* default 5 minutes*/
+    void readFileSystem();
+    void writeFileSystem();
 
-  void PSCallback(char *toppic, byte *payload, unsigned int length);
-  bool shouldSaveConfig;
-  void saveConfigCallback() { shouldSaveConfig = true; }
+    void PSCallback(char *toppic, byte *payload, unsigned int length);
+    bool shouldSaveConfig;
+    void saveConfigCallback() { shouldSaveConfig = true; }
 
-  char deviceId[24];
-  char MQTTServer[40];
-  char MQTTPort[6] = "1883";
-  char mqtt_out_toppic[64] = "";
-  char mqtt_in_toppic[64] = "";
+    char deviceId[24];
+    char MQTTServer[40];
+    char MQTTPort[6] = "1883";
+    char mqtt_out_toppic[64] = "";
+    char mqtt_in_toppic[64] = "";
 
-  char fwServer[128] = "";
-  char versionString[16] = "";
+    char fwServer[128] = "";
+    char versionString[16] = "";
 
-  const char deviceType[24] = "";
+    const char deviceType[24] = "";
 
-  // where to listen for updates
-  const char *otaTopic = "idlota/" + *deviceType;
+    // where to listen for updates
+    const char *otaTopic = "idlota/" + *deviceType;
 
-  // where to check for updates 
-  const char *otaMeta = "http://10.13.37.1/db/" + *deviceType;
+    // where to check for updates
+    const char *otaMeta = "http://10.13.37.1/db/" + *deviceType;
 
-  // every time a new firmware is released, existing esp devices
-  // will check this type and version number to see if they need updating
-  esp32FOTA fota = esp32FOTA(String(deviceType), VERSION);
+    // every time a new firmware is released, existing esp devices
+    // will check this type and version number to see if they need updating
+    esp32FOTA fota = esp32FOTA(String(deviceType), VERSION);
 
-  void tryOTA();
+    void tryOTA();
 
-public:
-  // constructor destructor
-  IDLNetworking(const char *deviceType);
-  //~IDLNetworking();
+  public:
+    // constructor destructor
+    IDLNetworking(const char *deviceType);
+    //~IDLNetworking();
 
-  // loop
-  void loop();
+    // loop
+    void loop();
 
-  void reset();
+    void reset();
 
-  void begin();
+    void begin();
 
-  void sendMeasurement(char *kind, char *values);
+    void sendRaw(char *kind, JsonObject &json);
 
-  void sendRaw(char *kind, JsonObject &json);
+    void sendValues(char *kind, JsonObject &values);
 
-  void sendValues(char *kind, JsonObject &values);
-
-  char *getDeviceId(){return deviceId;}
+    char *getDeviceId() { return deviceId; }
 };
 
 #endif /* _IDLNETWORKING_H_ */
