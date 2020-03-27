@@ -32,7 +32,8 @@
         "author":"Nick O'Leary"
       },
       {
-        "name":"WiFiManager",
+        "name":"WifiManager",
+        "author":"tzapu",
         "version":"https://github.com/tzapu/WiFiManager.git#development"
       },
       {

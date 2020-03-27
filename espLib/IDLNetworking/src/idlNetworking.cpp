@@ -150,8 +150,9 @@ bool IDLNetworking::wifiPortal(int timeout) {
   // and goes into a blocking loop awaiting configuration
 
   wifiManager.setTimeout(timeout);
-  char buf[41];
+  char buf[30];
   sprintf(buf, "CONFIGURE ME - %s", deviceId);
+  delay(200);
   wifiManager.autoConnect(buf);
 
   if (shouldSaveConfig) {
@@ -217,9 +218,9 @@ void IDLNetworking::reset() {
 }
 
 
-void IDLNetworking::sendRaw(char *kind, JsonObject json){
+void IDLNetworking::sendRaw(char *kind, JsonObject &json){
   sprintf(mqtt_out_toppic, "idlcase/%s/%s", kind, deviceId);
-  unsigned int length = json.measureLength();
+  size_t length = json.measureLength();
   PSClient.beginPublish(mqtt_out_toppic, length, false) ;
   json.printTo(PSClient);
   PSClient.endPublish();

@@ -78,11 +78,9 @@ public:
 
   void sendMeasurement(char *kind, char *values);
 
-    // void sendMeasurement(float value, char *unit, int precision = 2);
-
-    // void sendEvent(char *type, char *msg, char *payload);
-
-    void sendRaw(char *kind, JsonObject json);
+  void sendRaw(char *kind, JsonObject &json);
+  
+  void sendValues(char *kind, JsonObject &values);
 };
 
 #endif /* _IDLNETWORKING_H_ */
