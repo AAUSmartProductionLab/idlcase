@@ -1,15 +1,18 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
+#include <IDLNetworking.h>
+#include <ArduinoJson.h>
 
 const i2s_port_t I2S_PORT = I2S_NUM_0;
 const int BLOCK_SIZE = 1024;
 
-const double samplingFrequency = 44100;
+const int samplingFrequency = 44100;
 const int maxMicFreq = 15000;
 const int nBins = 32;
 
 const float binSize = samplingFrequency / BLOCK_SIZE;
-const int maxBins = maxMicFreq / binSize;
+const int usefulBins = maxMicFreq / binSize;
+const int binsToBin = ceil(usefulBins / nBins);
 double bins[nBins];
 
 double vReal[BLOCK_SIZE];
@@ -18,6 +21,8 @@ int32_t samples[BLOCK_SIZE];
 
 arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
                             samplingFrequency); /* Create FFT object */
+
+IDLNetworking idl = IDLNetworking("espFFT");
 
 void setupMic() {
   Serial.println("Configuring I2S...");
@@ -62,7 +67,8 @@ void setupMic() {
 }
 
 void setup() {
-  Serial.begin(1000000);
+  Serial.begin(921600);
+  idl.begin();
   setupMic();
 }
 
@@ -76,6 +82,9 @@ int32_t dithernoise() {
 }
 
 void loop() {
+  delay(250);
+  idl.loop();
+
   // Read multiple samples at once and calculate the sound pressure
 
   // annoying variable needed to read i2s. It not used for anything.
@@ -106,26 +115,47 @@ void loop() {
     bins[i] = 0;
   }
 
-  int index = 0;
-  for (int i = 2; i <= maxBins; i++) {
-    index = i / (maxBins / nBins);
-    bins[index] = max(bins[index], log2(vReal[i]));
+  // go over each bin
+  for (int i = 0; i <= nBins; i++) {
+    int offset = i*binsToBin;
+    for (int j = offset; j < offset + binsToBin; j++){
+      bins[i] = max(bins[i], log2(vReal[j]));
+    }
   }
 
   Serial.print(char(27)); // Print "esc"
   Serial.print("[2J");
 
-  // PrintVector(vReal,BLOCK_SIZE,SCL_FREQUENCY);
-
-  for (int i = 0; i < nBins; i++) {
-    Serial.println(String(bins[i]));
-  }
-
   Serial.println();
+  
+  // send the data on mqtt as a json.
+  DynamicJsonBuffer jsonBuffer;
+
+  JsonObject& j_root = jsonBuffer.createObject();
+  j_root["type"] = "measurement";
+  JsonObject& j_values = j_root.createNestedObject("values");
+  JsonObject& j_dbm = j_values.createNestedObject("dbm");
+  JsonObject& j_frequency = j_values.createNestedObject("frequency");
+  j_frequency["value"] = FFT.MajorPeak();
+
+  for(int i = 0; i < nBins; i++){
+    // calculate what the real index was
+    int offset = i*binsToBin;
+    // calculate the frequency for this bin.
+    float freq = ((offset * samplingFrequency) / 1024);
+    // store the bin in json.
+    j_dbm[String(freq)] = bins[i];
+    // calculate the next i 
+     // some cleaver rearrangement to isolate and get the next i
+  }
+  
+  j_dbm.prettyPrintTo(Serial);
+
+  idl.sendRaw("microphone", j_root);
 
   // PrintVector(vReal, (1024 >> 1), SCL_FREQUENCY);
   double x = FFT.MajorPeak();
   Serial.println(x, 6); // Print out what frequency is the most dominant.
 }
 
-// abscissa = ((i * 1.0 * samplingFrequency) / 1024);
+
