@@ -1,7 +1,19 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
-#include <IDLNetworking.h>
+
 #include <ArduinoJson.h>
+
+/***************************************************************************/
+// oled screen
+#include "SSD1306Wire.h"        
+
+/***************************************************************************/
+// Industrial Data Logger networking implementation.
+#include <IDLNetworking.h>
+
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
 
 const i2s_port_t I2S_PORT = I2S_NUM_0;
 const int BLOCK_SIZE = 1024;
@@ -19,10 +31,36 @@ double vReal[BLOCK_SIZE];
 double vImag[BLOCK_SIZE];
 int32_t samples[BLOCK_SIZE];
 
+
+
 arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
                             samplingFrequency); /* Create FFT object */
 
 IDLNetworking idl = IDLNetworking("espFFT");
+
+
+/*=========================================================================*/
+// OLED screen instance 
+SSD1306Wire display(0x3c, 5, 4);
+
+
+/**************************************************************************/
+// display loop
+void displayLoop() {
+    display.clear();
+    if (WiFi.status() != WL_CONNECTED) {
+      display.setFont(ArialMT_Plain_24);
+      display.drawString(0, 20, "Connecting...");
+    } else {
+      display.setFont(ArialMT_Plain_24);
+      display.drawString(0, 0, idl.getDeviceId());
+      display.setFont(ArialMT_Plain_10);
+      display.drawString(0, 25, WiFi.localIP().toString());
+    }
+
+    display.display();
+}
+
 
 void setupMic() {
   Serial.println("Configuring I2S...");
@@ -70,6 +108,9 @@ void setup() {
   Serial.begin(921600);
   idl.begin();
   setupMic();
+  
+  display.init();
+  displayLoop(); 
 }
 
 // Return light triangular shaped dithernoise for 
@@ -84,27 +125,28 @@ int32_t dithernoise() {
 void loop() {
   delay(250);
   idl.loop();
+  displayLoop();
 
-  // Read multiple samples at once and calculate the sound pressure
-
-  // annoying variable needed to read i2s. It not used for anything.
+  // Annoying variable needed to read i2s. It not used for anything.
   size_t ps;
 
   // Read the sound data from i2s port
   int esp_err = i2s_read(I2S_PORT, &samples,
-                         BLOCK_SIZE, // the doc says bytes, but its elements.
+                         BLOCK_SIZE, // The doc says bytes, but its elements.
                          &ps,
-                         portMAX_DELAY); // no timeout
+                         portMAX_DELAY); // No timeout. wait til buffer is full
 
+  
   // Prepare the spamles for FFT
   // Discard the least significant bits to make it from 32 bit to 16 bit.
-  // Also add some dithering noise to help with downsampling
+  // Also add some dithering noise to help with downsampling artifacts
   for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
     vReal[i] = short((samples[i] + dithernoise()) >> 16);
     vImag[i] = 0.0; // Imaginary part must be zeroed in case of looping to avoid
                     // wrong calculations and overflows
   }
 
+  // Do the FFT 
   FFT.DCRemoval();
   FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
   FFT.Compute(FFT_FORWARD);
@@ -117,45 +159,54 @@ void loop() {
 
   // go over each bin
   for (int i = 0; i <= nBins; i++) {
+    // Calculate the offset in the vReal array
     int offset = i*binsToBin;
+    // Go the offset and find the maximum value in vReal array 
     for (int j = offset; j < offset + binsToBin; j++){
       bins[i] = max(bins[i], log2(vReal[j]));
     }
   }
 
+  // Clear the serial 
   Serial.print(char(27)); // Print "esc"
   Serial.print("[2J");
-
   Serial.println();
   
-  // send the data on mqtt as a json.
+  // prepare a json buffer.
   DynamicJsonBuffer jsonBuffer;
 
+  // create a root object
   JsonObject& j_root = jsonBuffer.createObject();
+  // Set message type to measurement
   j_root["type"] = "measurement";
+  // Create an object to store values 
   JsonObject& j_values = j_root.createNestedObject("values");
+  // Create two objects. One for DBM valuse and another for the Frequency
   JsonObject& j_dbm = j_values.createNestedObject("dbm");
   JsonObject& j_frequency = j_values.createNestedObject("frequency");
+  // Store the peak frequency 
   j_frequency["value"] = FFT.MajorPeak();
 
+  // Store the Bins as key value pairs. 
+  // The key is the start frequency of the bin
   for(int i = 0; i < nBins; i++){
-    // calculate what the real index was
+    // calculate what the offset was in the vReal array
     int offset = i*binsToBin;
     // calculate the frequency for this bin.
     float freq = ((offset * samplingFrequency) / 1024);
     // store the bin in json.
     j_dbm[String(freq)] = bins[i];
-    // calculate the next i 
-     // some cleaver rearrangement to isolate and get the next i
   }
   
+  // Print to serial 
   j_dbm.prettyPrintTo(Serial);
 
-  idl.sendRaw("microphone", j_root);
-
-  // PrintVector(vReal, (1024 >> 1), SCL_FREQUENCY);
   double x = FFT.MajorPeak();
   Serial.println(x, 6); // Print out what frequency is the most dominant.
+
+  // Print to mqtt // This is really really slow for some reason.
+  idl.sendRaw("microphone", j_root);
+
 }
 
 
