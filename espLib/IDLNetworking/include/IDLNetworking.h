@@ -79,8 +79,10 @@ public:
   void sendMeasurement(char *kind, char *values);
 
   void sendRaw(char *kind, JsonObject &json);
-  
+
   void sendValues(char *kind, JsonObject &values);
+
+  char *getDeviceId(){return deviceId;}
 };
 
 #endif /* _IDLNETWORKING_H_ */
