@@ -2,10 +2,10 @@ all:
   children:
     cloud:
       hosts:
-        130.225.57.82:
+        metric-log01.srv.aau.dk:
           ansible_user: ansible
           ansible_become: yes
-          ansible_ssh_common_args: -o UserKnownHostsFile=/known_hosts
+          ansible_ssh_common_args: -F ssh_config
           ansible_python_interpreter: /usr/bin/python3
     case:
       hosts:
