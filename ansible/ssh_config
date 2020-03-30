@@ -10,6 +10,6 @@ Host metric-log01.srv.aau.dk
     ForwardAgent yes
     UserKnownHostsFile /known_hosts
 
-Host 10.14.47.2
+Host 10.14.47.*
     ProxyJump metric-log01.srv.aau.dk
     UserKnownHostsFile /known_hosts

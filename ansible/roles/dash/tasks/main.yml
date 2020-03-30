@@ -9,6 +9,7 @@
   copy:
     src: dash-arm-build
     dest: /home/pi/dash
+    mode: o+rx
   register: dashbinary
 
 - name: restart getty@tty1.service
