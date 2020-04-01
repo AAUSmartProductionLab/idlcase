@@ -1,12 +1,15 @@
-Host metric-log01
+Host metric-log01.srv.aau.dk
+    # Direct connection
     HostName metric-log01.srv.aau.dk
+    Port 22
+    # Connect though an already open tunnel
+    # E.g. ssh -lEO52RB@id.aau.dk -L 0.0.0.0:2222:metric-log01.srv.aau.dk:22 sshgw.aau.dk 
+    # HostName 172.17.0.1
+    # Port 2222
     User ansible
     ForwardAgent yes
     UserKnownHostsFile /known_hosts
-    # Use this if you need to connect though the sshgw - when outside of aau's network
-    # Replace with our own AAU ID
-    # ProxyCommand ssh -lEO52RB@id.aau.dk -v -W 'metric-log01.srv.aau.dk:22' sshgw.aau.dk
 
-Host 10.14.47.2
-    ProxyJump metric-log01
+Host 10.14.47.*
+    ProxyJump metric-log01.srv.aau.dk
     UserKnownHostsFile /known_hosts
