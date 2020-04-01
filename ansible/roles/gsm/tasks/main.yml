@@ -4,6 +4,11 @@
     src: telenor.service
     dest: /etc/systemd/system/telenor.service
 
+- name: enable telenor.service
+  service:
+    name: telenor.service
+    enabled: true
+
 - name: add wwan0 device
   copy:
     src: wwan0.network

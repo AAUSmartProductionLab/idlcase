@@ -12,6 +12,18 @@ http:
         certResolver: sample
       middlewares:
         - api-auth
+    grafana-second-case:
+      rule: "Host(`grafana.second-case.idl.mp.aau.dk`)"
+      service: grafana-second-case
+      tls:
+        certResolver: sample
+    api-second-case:
+      rule: "Host(`api.second-case.idl.mp.aau.dk`)"
+      service: api-second-case
+      tls:
+        certResolver: sample
+      middlewares:
+        - api-auth
     redirecttohttps:
       entryPoints: 
         - web
@@ -33,6 +45,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.14.47.2:9090/"
+    grafana-second-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.3:3000/"
+    api-second-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.3:9090/"
 
   middlewares:
     httpsredirect:

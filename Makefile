@@ -4,7 +4,7 @@ PLAYBOOK?=main.yml
 clean:
 	rm -f ansible/dash-arm-build dash/dash
 	rm -f ansible/api-arm-build api/api
-
+.PHONY: dash
 dash: dash/*.go
 	docker run -it --rm \
 		-v $(ROOT_DIR):/project \
@@ -14,7 +14,7 @@ dash: dash/*.go
 		-w /project/dash \
 		-u $(UID) \
 		golang:1.13.8 go build -o ../ansible/dash-arm-build .
-
+.PHONY: api
 api: api/*.go
 	docker run -it --rm \
 		-v $(ROOT_DIR):/project \
