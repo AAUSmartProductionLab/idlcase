@@ -1,13 +1,17 @@
 #include "IDLNetworking.h"
 
-IDLNetworking::IDLNetworking(const char *deviceType) {
-    deviceType = deviceType;
+IDLNetworking::IDLNetworking(const char *_deviceType, int _version) 
+    : fota(esp32FOTA(String(_deviceType), _version))
+{
+    deviceType = _deviceType;
+    version = _version;
 }
 
 void IDLNetworking::begin() {
-
     sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
-    sprintf(versionString, "Version: %d", VERSION);
+    sprintf(versionString, "Version: %d", version);
+    sprintf(otaMeta, "http://10.13.37.1/db/%s", deviceType);
+    sprintf(otaTopic, "idlota/%s", deviceType);
 
     readFileSystem();
     wifiPortal();
@@ -26,8 +30,8 @@ void IDLNetworking::begin() {
 void IDLNetworking::tryOTA() {
     fota.checkURL = otaMeta;
 
-    bool updatedNeeded = fota.execHTTPcheck();
-    if (updatedNeeded) {
+    bool updateNeeded = fota.execHTTPcheck();
+    if (updateNeeded) {
         fota.execOTA();
     }
 }

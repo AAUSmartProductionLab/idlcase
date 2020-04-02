@@ -21,7 +21,6 @@
 
 /***************************************************************************/
 // firmware over the air.
-#include "version.h"
 #include <esp32fota.h>
 
 class IDLNetworking {
@@ -50,23 +49,24 @@ class IDLNetworking {
     char fwServer[128] = "";
     char versionString[16] = "";
 
-    const char deviceType[24] = "";
+    const char *deviceType;
 
     // where to listen for updates
-    const char *otaTopic = "idlota/" + *deviceType;
+    char otaTopic[35];
 
     // where to check for updates
-    const char *otaMeta = "http://10.13.37.1/db/" + *deviceType;
+    char otaMeta[50];
 
     // every time a new firmware is released, existing esp devices
     // will check this type and version number to see if they need updating
-    esp32FOTA fota = esp32FOTA(String(deviceType), VERSION);
+    int version;
+    esp32FOTA fota;
 
     void tryOTA();
 
   public:
     // constructor destructor
-    IDLNetworking(const char *deviceType);
+    IDLNetworking(const char *_deviceType, int _version);
     //~IDLNetworking();
 
     // loop
@@ -81,6 +81,8 @@ class IDLNetworking {
     void sendValues(char *kind, JsonObject &values);
 
     char *getDeviceId() { return deviceId; }
+
+    char *getVersionString() { return versionString; }
 };
 
 #endif /* _IDLNETWORKING_H_ */

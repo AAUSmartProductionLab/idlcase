@@ -1,9 +1,24 @@
 #!/bin/bash -ex
+
+# Raspberry pi target
+TARGET=10.14.47.2
+
 FIRMWAREPATH=$1
 TYPE=$(basename $(pwd))
 
+ssh -F ../ssh_config -N -L8080:${TARGET}:80 metric-log01 &
+
+PID=$!
+
+function finish {
+    kill ${PID}
+}
+sleep 5
+trap finish EXIT
+
 # Upload firmware - save its name
-FIRMWARENAME=`curl -XPOST --data-binary @${FIRMWAREPATH} 172.27.23.173/firmware`
+FIRMWARENAME=`curl -XPOST --data-binary @${FIRMWAREPATH} localhost:8080/firmware`
 
 # Announce firmware, 
-curl -XPUT 172.27.23.173/announce/${TYPE}/${FIRMWARENAME}
+curl -XPUT localhost:8080/announce/${TYPE}/${FIRMWARENAME}
+

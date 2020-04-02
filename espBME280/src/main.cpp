@@ -4,6 +4,8 @@
 
 #include <ArduinoJson.h>
 
+#include "version.h"
+
 /***************************************************************************/
 // oled screen
 #include "SSD1306Wire.h"
@@ -19,7 +21,7 @@
 /*=========================================================================*/
 // IDLNetworking instance
 
-IDLNetworking idl = IDLNetworking("espBME280");
+IDLNetworking idl = IDLNetworking("espBME280", VERSION);
 
 /*=========================================================================*/
 // OLED screen instance
@@ -36,6 +38,7 @@ void displayLoop() {
         display.drawString(0, 0, idl.getDeviceId());
         display.setFont(ArialMT_Plain_10);
         display.drawString(0, 25, WiFi.localIP().toString());
+        display.drawString(0, 36, idl.getVersionString());
     }
 
     display.display();
@@ -99,19 +102,19 @@ void loop() {
     JsonObject &j_c = j_values.createNestedObject("Celsius");
     j_c["value"] = bme.readTemperature();
     idl.sendRaw("temperature", j_root);
-    j_root.prettyPrintTo(Serial);
+    //j_root.prettyPrintTo(Serial);
     j_values.remove("Celsius");
 
     JsonObject &j_h = j_values.createNestedObject("RH");
     j_h["value"] = bme.readHumidity();
     idl.sendRaw("humidity", j_root);
-    j_root.prettyPrintTo(Serial);
+    //j_root.prettyPrintTo(Serial);
     j_values.remove("RH");
 
     JsonObject &j_p = j_values.createNestedObject("hPa");
     j_p["value"] = bme.readPressure();
     idl.sendRaw("pressure", j_root);
-    j_root.prettyPrintTo(Serial);
+    //j_root.prettyPrintTo(Serial);
 
     displayLoop();
 
