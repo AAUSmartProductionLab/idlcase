@@ -16,7 +16,9 @@ void IDLNetworking::begin() {
     readFileSystem();
     wifiPortal();
     writeFileSystem();
-
+    
+    tryOTA();
+    
     PSClient.setServer(MQTTServer, String(MQTTPort).toInt());
     PSClient.setCallback(
         [this](char *topic, byte *payload, unsigned int length) {
