@@ -20,7 +20,11 @@ func main() {
 
 	// fota is our over-the-air update manager
 	// Its just a webserver with a few endpoints
-	fota := fota.Webserver{PublishFirmware: transport.PublishNoPayload}
+	fota := fota.Webserver{
+		PublishFirmware: transport.PublishNoPayload,
+		Database:        "database/",
+		StorePath:       "storage/",
+	}
 	err = fota.Setup()
 	if err != nil {
 		panic(err)

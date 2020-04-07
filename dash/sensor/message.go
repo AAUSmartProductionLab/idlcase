@@ -10,40 +10,49 @@ import (
 )
 
 type Data interface {
-	PrettyValue() string
-	PrettyUnit() string
-
-	StoreTags(map[string]string)
-	StoreValues(map[string]interface{})
-
-	Compare(interface{}) (int, error)
+	Store(map[string]string, map[string]interface{})
 }
 
 // Message represents a sensor message
 type Message struct {
-	DeviceID string
-	Type     string
+	DeviceID string // e.g. BEEEEF - extracted from mqtt topic
+	Kind     string // e.g. temperature - extracted from mqtt topic
 	At       time.Time
 
-	Data Data
+	Data
 }
 
 // UnmarshalJSON lets us handle our own unmarshalling
 func (m *Message) UnmarshalJSON(b []byte) error {
-	if m.Type == "event" {
-		// use event type
-		m.Data = &Event{}
-		return json.Unmarshal(b, &m.Data)
+	intermediate := struct{ Type *string }{}
+
+	err := json.Unmarshal(b, &intermediate)
+	if err != nil {
+		return fmt.Errorf("unable to parse intermediate message: %s")
+	}
+	if intermediate.Type == nil {
+		return fmt.Errorf("unable to determine message type, no type field found: %s", string(b))
 	}
 
-	// all other values are considered measurements .. for now
-	m.Data = &Measurement{}
-	return json.Unmarshal(b, &m.Data)
+	switch *intermediate.Type {
+	case "event":
+		m.Data = &Event{}
+	case "measurement":
+		m.Data = &Measurement{}
+	default:
+		return fmt.Errorf("unknown message type: %s", intermediate.Type)
+	}
+
+	err = json.Unmarshal(b, m.Data)
+	if err != nil {
+		return fmt.Errorf("unable to parse %s message: %s", *intermediate.Type, err)
+	}
+	return nil
 }
 
 // Metric returns this metrics key
 func (m *Message) Metric() string {
-	return fmt.Sprintf("%s/%s", m.DeviceID, m.Type)
+	return fmt.Sprintf("%s/%s", m.DeviceID, m.Kind)
 }
 
 // Since returns a human readable color formatted duration
@@ -70,16 +79,15 @@ func (m *Message) Since() string {
 	return sinceFormatted
 }
 
-func (m *Message) ToPoint() (*client.Point, error) {
+func (m *Message) Points() ([]*client.Point, error) {
 	tags := map[string]string{
 		"deviceID": m.DeviceID,
 	}
-	m.Data.StoreTags(tags)
-
 	values := map[string]interface{}{}
-	m.Data.StoreValues(values)
 
-	p, err := client.NewPoint(m.Type, tags, values, m.At)
+	m.Store(tags, values)
+
+	p, err := client.NewPoint(m.Kind, tags, values, m.At)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new influxdb point: %w", err)
 	}
