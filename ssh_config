@@ -7,6 +7,6 @@ Host metric-log01
     # Replace with our own AAU ID
     # ProxyCommand ssh -lEO52RB@id.aau.dk -v -W 'metric-log01.srv.aau.dk:22' sshgw.aau.dk
 
-Host 10.14.47.2
+Host 10.14.47.*
     ProxyJump metric-log01
     UserKnownHostsFile ../known_hosts
