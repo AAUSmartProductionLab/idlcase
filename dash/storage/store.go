@@ -28,16 +28,12 @@ func NewStore() (*Store, error) {
 
 // Add adds a received sensor message for storage
 func (s *Store) Add(m sensor.Message) error {
-	points, err := m.Points()
+	bp, err := m.Points()
 	if err != nil {
 		return fmt.Errorf("unable to create point from Message: %w", err)
 	}
 
-	// Create a new point batch
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: "idl",
-	})
-	bp.AddPoints(points)
+	bp.SetDatabase("idl")
 
 	err = s.Write(bp)
 	if err != nil {

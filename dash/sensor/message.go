@@ -79,7 +79,7 @@ func (m *Message) Since() string {
 	return sinceFormatted
 }
 
-func (m *Message) Store() (*client.BatchPoints, error) {
+func (m *Message) Points() (client.BatchPoints, error) {
 
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{})
 	if err != nil {
@@ -103,5 +103,5 @@ func (m *Message) Store() (*client.BatchPoints, error) {
 		bp.AddPoint(p)
 	}
 
-	return &bp, nil
+	return bp, nil
 }

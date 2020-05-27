@@ -1,5 +1,6 @@
 package sensor
 
+// Event represents an event happening
 type Event struct {
 	// Payload is used for machine readable content
 	Payload string
@@ -9,7 +10,9 @@ type Event struct {
 }
 
 // Store saves this event into a record
-func (e *Event) Store(_ map[string]string, values map[string]interface{}) {
-	values["payload"] = e.Payload
-	values["msg"] = e.Msg
+func (e *Event) Read() (map[string]string, map[string]interface{}, bool) {
+	return make(map[string]string), map[string]interface{}{
+		"payload": e.Payload,
+		"msg":     e.Msg,
+	}, false
 }

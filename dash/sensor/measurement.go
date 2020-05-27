@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// Measurement represents some measured data
 type Measurement struct {
 	PrecisionValue *int                          `json:"precision"`
 	Values         map[string]map[string]float64 // map[unit]map[name]value
@@ -15,7 +16,7 @@ type Measurement struct {
 }
 
 func (m *Measurement) UnmarshalJSON(b []byte) error {
-	err = json.Unmarshal(b, m)
+	err := json.Unmarshal(b, m)
 	if err != nil {
 		return err
 	}
