@@ -10,7 +10,7 @@ import (
 )
 
 type Data interface {
-	Store(map[string]string, map[string]interface{})
+	Read() (map[string]string, map[string]interface{}, bool)
 }
 
 // Message represents a sensor message
@@ -79,18 +79,29 @@ func (m *Message) Since() string {
 	return sinceFormatted
 }
 
-func (m *Message) Points() ([]*client.Point, error) {
-	tags := map[string]string{
-		"deviceID": m.DeviceID,
-	}
-	values := map[string]interface{}{}
+func (m *Message) Store() (*client.BatchPoints, error) {
 
-	m.Store(tags, values)
-
-	p, err := client.NewPoint(m.Kind, tags, values, m.At)
+	bp, err := client.NewBatchPoints(client.BatchPointsConfig{})
 	if err != nil {
-		return nil, fmt.Errorf("unable to create new influxdb point: %w", err)
+		return nil, fmt.Errorf("could not create new batch points: %w", err)
 	}
 
-	return p, nil
+	for {
+
+		tags, values, ok := m.Data.Read()
+		if !ok {
+			break
+		}
+
+		tags["deviceId"] = m.DeviceID
+
+		p, err := client.NewPoint(m.Kind, tags, values, m.At)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create new influxdb point: %w", err)
+		}
+
+		bp.AddPoint(p)
+	}
+
+	return &bp, nil
 }
