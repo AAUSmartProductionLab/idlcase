@@ -1,9 +1,5 @@
 package sensor
 
-import (
-	"encoding/json"
-)
-
 // Measurement represents some measured data
 type Measurement struct {
 	PrecisionValue *int                          `json:"precision"`
@@ -15,15 +11,33 @@ type Measurement struct {
 	}
 }
 
-func (m *Measurement) UnmarshalJSON(b []byte) error {
-	err := json.Unmarshal(b, m)
-	if err != nil {
-		return err
+func (m *Measurement) loop() {
+	for unit, vals := range m.Values {
+		tags := map[string]string{"unit": unit}
+		for name, value := range vals {
+			tags["name"] = name
+			values := map[string]interface{}{"value": value}
+			m.reader <- struct {
+				tags   map[string]string
+				values map[string]interface{}
+			}{
+				tags:   tags,
+				values: values,
+			}
+		}
 	}
-	return nil
+	close(m.reader)
 }
 
 func (m *Measurement) Read() (map[string]string, map[string]interface{}, bool) {
+	if m.reader == nil {
+		m.reader = make(chan struct {
+			tags   map[string]string
+			values map[string]interface{}
+		})
+		go m.loop()
+	}
+
 	row, ok := <-m.reader
 	return row.tags, row.values, ok
 }

@@ -47,6 +47,7 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return fmt.Errorf("unable to parse %s message: %s", *intermediate.Type, err)
 	}
+
 	return nil
 }
 

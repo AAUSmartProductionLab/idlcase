@@ -41,8 +41,8 @@ func (s *Subscription) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 	}
 
 	smsg := sensor.Message{}
-	smsg.DeviceID = fields[1]
-	smsg.Kind = fields[2]
+	smsg.DeviceID = fields[2]
+	smsg.Kind = fields[1]
 	smsg.At = time.Now()
 
 	err := json.Unmarshal(msg.Payload(), &smsg)

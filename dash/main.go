@@ -51,7 +51,7 @@ func main() {
 	}
 
 	sub := transport.Subscription{
-		Topic: "idl/#",
+		Topic: "idlcase/#",
 		Handlers: []transport.Handler{
 			gui.SensorUpdate,
 			logAndStore,
