@@ -21,7 +21,7 @@ unsigned long lastRead;
 
 // Data wire is plugged into port 2 on the Arduino
 #define ONE_WIRE_BUS 26
-#define TEMPERATURE_PRECISION 9
+#define TEMPERATURE_PRECISION 11
 #define NUMBER_OF_THERMOMETERS 8
 
 /***************************************************************************/
@@ -132,8 +132,13 @@ void sensorsSetup() {
         Serial.print(" : ");
         sensors.getAddress(thermometer, i);
         printAddress(thermometer);
+
+        // set the resolution to x bit per device
+        sensors.setResolution(thermometer, TEMPERATURE_PRECISION);
     }
 
+    // setup SPI for the Ambient Light Sensor.    
+    delay(500);
     SPI.begin(14,12,13,15);                // initialization of SPI port
     SPI.setDataMode(SPI_MODE3); // configuration of SPI communication in mode 0
     SPI.setClockDivider(SPI_CLOCK_DIV8); // configuration of clock at 1MHz
@@ -148,6 +153,8 @@ void sensorsSetup() {
 void setup() {
     Serial.begin(115200);
     delay(100);
+    
+    sensorsSetup();
 
     idl.begin();
 
@@ -155,10 +162,7 @@ void setup() {
     display.init();
     displayLoop(); 
 
-    sensorsSetup();
     lastRead = millis();
-
-
     Serial.println("Setup done");
 }
 
