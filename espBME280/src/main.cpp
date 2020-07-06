@@ -89,34 +89,16 @@ void setup() {
 void loop() {
     idl.loop();
     
-    // prepare a json buffer.
-    DynamicJsonBuffer jsonBuffer;
-
-    // create a root object
-    JsonObject &j_root = jsonBuffer.createObject();
-    // Set message type to measurement
-    j_root["type"] = "measurement";
-    // Create an object to store values
-    JsonObject &j_values = j_root.createNestedObject("values");
-    // Create a value object with the name of the unit.  
-    JsonObject &j_c = j_values.createNestedObject("Celsius");
-    j_c["value"] = bme.readTemperature();
-    idl.sendRaw("temperature", j_root);
-    //j_root.prettyPrintTo(Serial);
-    j_values.remove("Celsius");
-
-    JsonObject &j_h = j_values.createNestedObject("RH");
-    j_h["value"] = bme.readHumidity();
-    idl.sendRaw("humidity", j_root);
-    //j_root.prettyPrintTo(Serial);
-    j_values.remove("RH");
-
-    JsonObject &j_p = j_values.createNestedObject("hPa");
-    j_p["value"] = bme.readPressure();
-    idl.sendRaw("pressure", j_root);
-    //j_root.prettyPrintTo(Serial);
+    
+    float temp = bme.readTemperature();
+    idl.pushMeasurement("temperature","sensor1","celcius", temp);
+    float hum = bme.readHumidity();
+    idl.pushMeasurement("humidity","sensor1","%",hum);
+    float pres = bme.readPressure();
+    idl.pushMeasurement("pressure","sensor1","Pa",pres);
+    
+    idl.sendAll();
 
     displayLoop();
 
-    delay(250);
 }
