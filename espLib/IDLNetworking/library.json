@@ -20,7 +20,7 @@
     "dependencies": [
       {
         "name": "esp32FOTA",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "author":"Chris Joyce",
         "url":"https://github.com/chrisjoyce911/esp32FOTA",
         "frameworks": "arduino"
@@ -38,7 +38,7 @@
       },
       {
         "name":"ArduinoJson",
-        "version": "5.13.4"
+        "version":"6.15.2"
       }
     ]
   }
