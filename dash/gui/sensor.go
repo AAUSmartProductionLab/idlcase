@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
@@ -28,7 +28,7 @@ type Sensor struct {
 // DisplayMessage knows about the previous value
 // and decides if the color should be red green or neutral
 type DisplayMessage struct {
-	sensor.Message
+	transport.Message
 
 	color *color.Color
 }
@@ -43,7 +43,7 @@ func (s *Sensor) Init() {
 }
 
 // Update handles sensor messages
-func (s *Sensor) Update(msg sensor.Message) {
+func (s *Sensor) Update(msg transport.Message) {
 	s.Lock()
 	defer s.Unlock()
 

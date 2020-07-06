@@ -3,8 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
-
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 	client "github.com/influxdata/influxdb1-client/v2"
 )
 
@@ -27,7 +26,7 @@ func NewStore() (*Store, error) {
 }
 
 // Add adds a received sensor message for storage
-func (s *Store) Add(m sensor.Message) error {
+func (s *Store) Add(m []transport.Message) error {
 	bp, err := m.Points()
 	if err != nil {
 		return fmt.Errorf("unable to create point from Message: %w", err)

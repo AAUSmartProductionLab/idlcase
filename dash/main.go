@@ -6,7 +6,6 @@ import (
 
 	"bitbucket.org/ragroup/idlcase/dash/fota"
 	"bitbucket.org/ragroup/idlcase/dash/gui"
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
 	"bitbucket.org/ragroup/idlcase/dash/storage"
 	"bitbucket.org/ragroup/idlcase/dash/transport"
 )
@@ -43,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	logAndStore := func(m sensor.Message) {
+	logAndStore := func(m []transport.Message) {
 		err = store.Add(m)
 		if err != nil {
 			log.Printf("unable to store data: %s", err)

@@ -1,7 +1,10 @@
 package sensor
 
+import "fmt"
+
 // Event represents an event happening
 type Event struct {
+	Message
 	// Payload is used for machine readable content
 	Payload string
 
@@ -9,10 +12,6 @@ type Event struct {
 	Msg string
 }
 
-// Store saves this event into a record
-func (e *Event) Read() (map[string]string, map[string]interface{}, bool) {
-	return make(map[string]string), map[string]interface{}{
-		"payload": e.Payload,
-		"msg":     e.Msg,
-	}, false
+func (m *Event) Metric() string {
+	return fmt.Sprintf("%s/%s", m.deviceID, "event")
 }

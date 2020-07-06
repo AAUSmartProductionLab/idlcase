@@ -1,0 +1,52 @@
+esphome:
+  name: temp1
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: "second-case"
+  password: "Aalborg9000Robotlab"
+
+ # Example configuration entry
+i2c:
+  - id: bus_a
+    sda: 5
+    scl: 4
+    scan: True
+    
+# Example configuration entry
+sensor:
+  - platform: bme280
+    i2c_id: bus_a
+    temperature:
+      name: "BME280 Temperature"
+      oversampling: 16x
+    pressure:
+      name: "BME280 Pressure"
+    humidity:
+      name: "BME280 Humidity"
+    address: 0x76
+    update_interval: 60s
+
+font:
+  - file: "comic.ttf"
+    id: my_font
+    size: 20
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+      it.print(0, 0, id(my_font), "Hello World!");
+
+# Example configuration entry
+mqtt:
+  broker: 10.13.37.1
+
+captive_portal:
+
+# Enable logging
+logger:
+
+ota:

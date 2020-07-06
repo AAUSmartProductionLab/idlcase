@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"bitbucket.org/ragroup/idlcase/dash/sensor"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-type Handler func(sensor.Message)
+type Handler func([]Message)
+
+type Message interface {
+	SetDeviceID(string)
+	DeviceID() string
+
+	Metric() string
+	Since() string
+}
 
 type Subscription struct {
 	// usually a wildcard, matching multiple sensors
@@ -34,24 +41,44 @@ func (s *Subscription) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 		return r == '/'
 	})
 
-	// fields should now contain 0 => idl, 1 => deviceid, 2 => name
+	// fields should now contain 0 => idl, 1 => deviceid, 2 => kind of message
 	if len(fields) != 3 {
 		log.Printf("unknown mqtt topic format: %s", msg.Topic())
 		return
 	}
 
-	smsg := sensor.Message{}
-	smsg.DeviceID = fields[2]
-	smsg.Kind = fields[1]
-	smsg.At = time.Now()
+	var msgInf []Message
 
-	err := json.Unmarshal(msg.Payload(), &smsg)
-	if err != nil {
-		log.Printf("unable to unmarshal json from mqtt message: %s", err)
+	switch fields[2] {
+	case "measurement":
+		m := []sensor.Measurement{}
+
+		err := json.Unmarshal(msg.Payload(), &m)
+		if err != nil {
+			log.Printf("could not unmarshal: %s", err)
+			return
+		}
+		for _, v := range m {
+			msgInf = append(msgInf, &v)
+		}
+	case "event":
+		m := &sensor.Event{}
+
+		err := json.Unmarshal(msg.Payload(), m)
+		if err != nil {
+			log.Printf("could not unmarshal: %s", err)
+			return
+		}
+		for _, v := range m {
+			msgInf = append(msgInf, &v)
+		}
+
+	default:
+		log.Printf("unknown message type: %s", fields[2])
 		return
 	}
 
 	for _, h := range s.Handlers {
-		go h(smsg)
+		go h(msgInf)
 	}
 }
