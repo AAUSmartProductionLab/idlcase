@@ -6,7 +6,7 @@ TARGET=10.14.47.2
 FIRMWAREPATH=$1
 TYPE=$(basename $(pwd))
 
-ssh -F ../ssh_config -S /tmp/.idl-%C -o "ControlMaster=auto" -o "ControlPersist=1h" -fN -L8080:${TARGET}:80 metric-log01
+ssh -F ../ssh_config -S /tmp/.idl-%C -o "ControlMaster=auto" -o "ControlPersist=1m" -fN -L8080:${TARGET}:80 metric-log01
 
 # Upload firmware - save its name
 FIRMWARENAME=`curl -XPOST --fail --data-binary @${FIRMWAREPATH} localhost:8080/firmware`
