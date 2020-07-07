@@ -36,7 +36,9 @@ void IDLNetworking::begin() {
 void IDLNetworking::loop(int frequency) {
     
     unsigned long t = millis() - lastPublish + (1.0/frequency)*1000;
-    if (t > 0) {delay(t);}
+    if (t > 0) {
+        delay(t);
+    }
     lastPublish = millis();
 
 
@@ -160,7 +162,7 @@ void IDLNetworking::setDefaults(){
 
     strcpy(MQTTServer, WiFi.gatewayIP().toString().c_str());
     strcpy(MQTTPort, "1883");
-    sprintf(otaServer, "%s/db/%s", WiFi.gatewayIP().toString().c_str() ,deviceType);
+    sprintf(otaServer, "http://%s/db/%s", WiFi.gatewayIP().toString().c_str() ,deviceType);
     sprintf(otaTopic, "idlota/%s", deviceType);
 }
 
@@ -283,7 +285,7 @@ void IDLNetworking::mqttConnect() {
 
 
 /*===========================================================================*/
-void IDLNetworking::pushEvent(char *table, char *message, char *payload){
+JsonObject IDLNetworking::pushEvent(char *table, char *message, char *payload){
     if(! jsonEvents){
         jsonEvents = new StaticJsonDocument<IDL_JSON_SIZE>();
     }
@@ -293,10 +295,12 @@ void IDLNetworking::pushEvent(char *table, char *message, char *payload){
     obj["message"] = message;
     obj["payload"] = payload;
 
+    return obj;
+
 }
 
-
-void IDLNetworking::pushMeasurement(char *table, char *name, char *unit, float value){
+/*===========================================================================*/
+JsonObject IDLNetworking::pushMeasurement(char *table, char *name, char *unit, float value){
     if(! jsonMeasurements){
         jsonMeasurements = new StaticJsonDocument<IDL_JSON_SIZE>();
     }
@@ -306,7 +310,18 @@ void IDLNetworking::pushMeasurement(char *table, char *name, char *unit, float v
     obj["name"] = name;
     obj["unit"] = unit;
     obj["value"] = value;
+
+    return obj;
 }
+
+/*===========================================================================*/
+void IDLNetworking::addTag(JsonObject msgObj, char *name, char *value){
+    if(!msgObj.containsKey("tags")){
+        msgObj.createNestedObject("tags");
+    }
+    msgObj["tags"][name] = value;
+}
+
 /*===========================================================================*/
 void IDLNetworking::sendMeasurements(){
     if(!jsonMeasurements){return;}

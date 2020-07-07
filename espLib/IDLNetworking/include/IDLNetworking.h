@@ -38,9 +38,9 @@ class IDLNetworking {
 
     void setDefaults();
 
-    void pushEvent(char *table, char *message, char *payload);
-
-    void pushMeasurement(char *table, char *name, char *unit, float value);
+    JsonObject pushEvent(char *table, char *message, char *payload);
+    JsonObject pushMeasurement(char *table, char *name, char *unit, float value);
+    void addTag(JsonObject msgObj, char *name, char *value);
 
     void sendMeasurements();
     void sendEvents();
@@ -60,7 +60,6 @@ class IDLNetworking {
 
     // variable to save last publish time
     unsigned long lastPublish = 0;
-    unsigned long nextPublish = 0;
 
     bool usingDefaults = false;
 

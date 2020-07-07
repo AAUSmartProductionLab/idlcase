@@ -87,11 +87,11 @@ void setup() {
 }
 
 void loop() {
-    idl.loop();
+    idl.loop(2);
     
     
     float temp = bme.readTemperature();
-    idl.pushMeasurement("temperature","sensor1","celcius", temp);
+    JsonObject msgPointer = idl.pushMeasurement("temperature","sensor1","celcius", temp);
     float hum = bme.readHumidity();
     idl.pushMeasurement("humidity","sensor1","%",hum);
     float pres = bme.readPressure();
