@@ -10,10 +10,7 @@ type Message struct {
 	Table    string // e.g. temperature - extracted from mqtt message
 	At       *time.Time
 
-	Tags []struct {
-		Name  string
-		Value string
-	}
+	Tags map[string]string
 }
 
 // Since returns a human readable color formatted duration
@@ -29,4 +26,17 @@ func (m *Message) DeviceID() string {
 
 func (m *Message) SetDeviceID(d string) {
 	m.deviceID = d
+}
+
+func (m *Message) Fill() {
+	if m.At == nil {
+		t := time.Now()
+		m.At = &t
+	}
+
+	if m.Tags == nil {
+		m.Tags = make(map[string]string)
+	}
+
+	m.Tags["deviceID"] = m.deviceID
 }

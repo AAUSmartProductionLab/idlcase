@@ -81,8 +81,8 @@ func (s *Sensor) render() {
 
 			fmt.Fprintf(s, "%-18.18s: %s %-4s %s\n",
 				lMsg.Metric(),
-				"??",
-				"??",
+				lMsg.UIValue(),
+				lMsg.UIUnit(),
 				lMsg.Since(),
 			)
 		}

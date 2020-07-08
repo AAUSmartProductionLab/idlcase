@@ -42,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	logAndStore := func(m []transport.Message) {
+	logAndStore := func(m transport.Message) {
 		err = store.Add(m)
 		if err != nil {
 			log.Printf("unable to store data: %s", err)
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	sub := transport.Subscription{
-		Topic: "idlcase/#",
+		Topic: "idl/#",
 		Handlers: []transport.Handler{
 			gui.SensorUpdate,
 			logAndStore,
