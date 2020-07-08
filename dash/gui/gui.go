@@ -3,7 +3,7 @@ package gui
 import (
 	"fmt"
 
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 	"github.com/jroimartin/gocui"
 )
 
@@ -43,7 +43,7 @@ func Run() error {
 }
 
 // SensorUpdate is the glue that connects our sensorView to the mqtt transport
-func SensorUpdate(msg sensor.Message) {
+func SensorUpdate(msg transport.Message) {
 	sensorView.Update(msg)
 }
 

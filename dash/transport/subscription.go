@@ -5,13 +5,26 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"bitbucket.org/ragroup/idlcase/dash/sensor"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	influx "github.com/influxdata/influxdb1-client/v2"
 )
 
-type Handler func(sensor.Message)
+type Handler func(Message)
+
+type Message interface {
+	SetDeviceID(string)
+	DeviceID() string
+
+	Metric() string
+	Since() string
+
+	UIValue() string
+	UIUnit() string
+
+	Point() (*influx.Point, error)
+}
 
 type Subscription struct {
 	// usually a wildcard, matching multiple sensors
@@ -34,24 +47,50 @@ func (s *Subscription) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 		return r == '/'
 	})
 
-	// fields should now contain 0 => idl, 1 => deviceid, 2 => name
+	// fields should now contain 0 => idl, 1 => deviceid, 2 => kind of message
 	if len(fields) != 3 {
 		log.Printf("unknown mqtt topic format: %s", msg.Topic())
 		return
 	}
 
-	smsg := sensor.Message{}
-	smsg.DeviceID = fields[1]
-	smsg.Type = fields[2]
-	smsg.At = time.Now()
+	switch fields[2] {
+	case "measurements":
+		m := []*sensor.Measurement{}
 
-	err := json.Unmarshal(msg.Payload(), &smsg)
-	if err != nil {
-		log.Printf("unable to unmarshal json from mqtt message: %s", err)
+		err := json.Unmarshal(msg.Payload(), &m)
+		if err != nil {
+			log.Printf("could not unmarshal: %s", err)
+			return
+		}
+
+		for _, msg := range m {
+			msg.SetDeviceID(fields[1])
+			msg.Fill()
+			for _, h := range s.Handlers {
+				go h(msg)
+			}
+		}
+
+	case "events":
+		m := []*sensor.Event{}
+
+		err := json.Unmarshal(msg.Payload(), &m)
+		if err != nil {
+			log.Printf("could not unmarshal: %s", err)
+			return
+		}
+
+		for _, msg := range m {
+			msg.SetDeviceID(fields[1])
+			msg.Fill()
+			for _, h := range s.Handlers {
+				go h(msg)
+			}
+		}
+
+	default:
+		log.Printf("unknown message type: %s", fields[2])
 		return
 	}
 
-	for _, h := range s.Handlers {
-		go h(smsg)
-	}
 }

@@ -1,48 +1,42 @@
 package sensor
 
-import "fmt"
+import (
+	"fmt"
 
+	client "github.com/influxdata/influxdb1-client/v2"
+)
+
+// Event represents an event happening
 type Event struct {
-	Type string
-	Msg  string
+	Message
+	// Payload is used for machine readable content
+	Payload string
+
+	// Msg is a more human readable content
+	Msg string
 }
 
-func (e *Event) Precision() int {
-	return 0
+func (m *Event) Metric() string {
+	return fmt.Sprintf("%s/%s", m.deviceID, m.Table)
 }
 
-func (e *Event) PrettyUnit() string {
+func (e *Event) UIValue() string {
+	return e.Msg
+}
+
+func (e *Event) UIUnit() string {
 	return ""
 }
 
-func (e *Event) PrettyValue() string {
-	return e.Type
-}
+func (e *Event) Point() (*client.Point, error) {
 
-func (e *Event) StoreTags(h map[string]string) {
-	h["type"] = e.Type
-}
-
-func (e *Event) StoreValues(h map[string]interface{}) {
-	h["msg"] = e.Msg
-}
-
-func (e *Event) Compare(d interface{}) (int, error) {
-	c, ok := d.(*Event)
-	if !ok {
-		return 0, fmt.Errorf("unable to compare %T to *Event", d)
+	point, err := client.NewPoint(e.Table, e.Tags, map[string]interface{}{
+		"payload": e.Payload,
+		"msg":     e.Msg,
+	}, *e.At)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create influxdb point: %s", err)
 	}
 
-	if c.Msg == e.Msg && c.Type == e.Type {
-		return 0, nil
-	}
-
-	// this seems rather stupid
-	cs := fmt.Sprintf("%s%s", c.Type, c.Msg)
-	ec := fmt.Sprintf("%s%s", e.Type, e.Msg)
-	if cs < ec {
-		return 1, nil
-	}
-
-	return -1, nil
+	return point, nil
 }
