@@ -50,30 +50,12 @@ void displayLoop() {
 EasyButton button(26); // pin 26
 
 void onPressed() {
-  // prepare a json buffer.
-    DynamicJsonBuffer jsonBuffer;
-
-    // create a root object
-    JsonObject &j_root = jsonBuffer.createObject();
-    // Set message type to event
-    j_root["type"] = "event";
-    j_root["msg"] = "button pressed shortly";
-    j_root["payload"] = "shortButtonPress";
-    idl.sendRaw("buttonpress", j_root);
-    //j_root.prettyPrintTo(Serial);
+    idl.pushEvent("events","button pressed shortly","shortButtonPress");
+    idl.sendEvents();
 }
 void onPressedForDuration() {
-  // prepare a json buffer.
-    DynamicJsonBuffer jsonBuffer;
-
-    // create a root object
-    JsonObject &j_root = jsonBuffer.createObject();
-    // Set message type to event
-    j_root["type"] = "event";
-    j_root["msg"] = "button pressed more than a second";
-    j_root["payload"] = "longButtonPress";
-    idl.sendRaw("buttonpress", j_root);
-    //j_root.prettyPrintTo(Serial);
+    idl.pushEvent("events", "button pressed more than a second", "longButtonPress");
+    idl.sendEvents();
 }
 
 
@@ -96,7 +78,7 @@ void setup() {
 }
 
 void loop() {
-    idl.loop();
+    idl.loop(0);
 
     button.read();
 

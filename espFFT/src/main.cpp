@@ -1,7 +1,7 @@
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
 
-#include <ArduinoJson.h>
+#include "version.h"
 
 /***************************************************************************/
 // oled screen
@@ -9,9 +9,12 @@
 
 /***************************************************************************/
 // Industrial Data Logger networking implementation.
-#include <IDLNetworking.h>
 
+#include <IDLNetworking.h>
+#define IDL_JSON_SIZE 8192
 /***************************************************************************/
+
+
 /***************************************************************************/
 /***************************************************************************/
 
@@ -34,7 +37,7 @@ int32_t samples[BLOCK_SIZE];
 arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
                             samplingFrequency); /* Create FFT object */
 
-IDLNetworking idl = IDLNetworking("espFFT");
+IDLNetworking idl = IDLNetworking("espFFT", VERSION);
 
 /*=========================================================================*/
 // OLED screen instance
@@ -100,7 +103,7 @@ void setupMic() {
 }
 
 void setup() {
-    Serial.begin(921600);
+    Serial.begin(115200);
     idl.begin();
     setupMic();
 
@@ -118,8 +121,7 @@ int32_t dithernoise() {
 }
 
 void loop() {
-    delay(250);
-    idl.loop();
+    idl.loop(0);
     displayLoop();
 
     // Annoying variable needed to read i2s. It not used for anything.
@@ -162,25 +164,7 @@ void loop() {
         }
     }
 
-    // Clear the serial
-    Serial.print(char(27)); // Print "esc"
-    Serial.print("[2J");
-    Serial.println();
-
-    // prepare a json buffer.
-    DynamicJsonBuffer jsonBuffer;
-
-    // create a root object
-    JsonObject &j_root = jsonBuffer.createObject();
-    // Set message type to measurement
-    j_root["type"] = "measurement";
-    // Create an object to store values
-    JsonObject &j_values = j_root.createNestedObject("values");
-    // Create two objects. One for DBM valuse and another for the Frequency
-    JsonObject &j_dbm = j_values.createNestedObject("dbm");
-    JsonObject &j_frequency = j_values.createNestedObject("frequency");
-    // Store the peak frequency
-    j_frequency["value"] = FFT.MajorPeak();
+    idl.pushMeasurement("microphone","sensor 1","Hz",FFT.MajorPeak());
 
     // Store the Bins as key value pairs.
     // The key is the start frequency of the bin
@@ -188,17 +172,14 @@ void loop() {
         // calculate what the offset was in the vReal array
         int offset = i * binsToBin;
         // calculate the frequency for this bin.
-        float freq = ((offset * samplingFrequency) / 1024);
+        char freq[20];
+        sprintf(freq,"%.0f", ((offset * samplingFrequency) / 1024.0));
+        //int freq2 = ((offset * samplingFrequency) / 1024.0);
         // store the bin in json.
-        j_dbm[String(freq)] = bins[i];
+        auto msg = idl.pushMeasurement("microphone","sensor 1","dBm",bins[i]);
+        idl.addTag(msg,"band",freq);
     }
 
-    // Print to serial
-    j_dbm.prettyPrintTo(Serial);
+    idl.sendMeasurements();
 
-    double x = FFT.MajorPeak();
-    Serial.println(x, 6); // Print out what frequency is the most dominant.
-
-    // Print to mqtt // This is really really slow for some reason.
-    idl.sendRaw("microphone", j_root);
 }
