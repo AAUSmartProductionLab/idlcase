@@ -41,6 +41,7 @@ class IDLNetworking {
     JsonObject pushEvent(char *table, char *message, char *payload);
     JsonObject pushMeasurement(char *table, char *name, char *unit, float value);
     void addTag(JsonObject msgObj, char *name, char *value);
+    void addTag(JsonObject msgObj, char *name, int value);
 
     void sendMeasurements();
     void sendEvents();

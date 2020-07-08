@@ -34,13 +34,11 @@ void IDLNetworking::begin() {
 /*===========================================================================*/
 // Loop function to update the IDLNetworking library
 void IDLNetworking::loop(int frequency) {
-    
-    unsigned long t = millis() - lastPublish + (1.0/frequency)*1000;
-    if (t > 0) {
-        delay(t);
+    if (frequency > 0){
+        unsigned long t = millis() - lastPublish + (1.0/frequency)*1000;
+        if (t > 0) {delay(t);}
+        lastPublish = millis();
     }
-    lastPublish = millis();
-
 
     if (!PSClient.connected()) {
         mqttConnect();
@@ -51,6 +49,7 @@ void IDLNetworking::loop(int frequency) {
         wifiPortal();
     }
 }
+
 
 /*===========================================================================*/
 // Reset clears all stored information on the flash.
@@ -321,13 +320,19 @@ void IDLNetworking::addTag(JsonObject msgObj, char *name, char *value){
     }
     msgObj["tags"][name] = value;
 }
+void IDLNetworking::addTag(JsonObject msgObj, char *name, int value){
+    if(!msgObj.containsKey("tags")){
+        msgObj.createNestedObject("tags");
+    }
+    msgObj["tags"][name] = value;
+}
 
 /*===========================================================================*/
 void IDLNetworking::sendMeasurements(){
     if(!jsonMeasurements){return;}
 
     // debug print to servial. This is expensive prosessing wise. 
-    serializeJsonPretty(*jsonMeasurements, Serial);
+    //serializeJsonPretty(*jsonMeasurements, Serial);
 
     // send measurements
     char buff[25];
@@ -346,13 +351,13 @@ void IDLNetworking::sendEvents(){
     if(!jsonEvents){return;}
 
     // debug print to servial. This is expensive prosessing wise. 
-    serializeJsonPretty(*jsonEvents, Serial);
+    //serializeJsonPretty(*jsonEvents, Serial);
     
     // send events
     char buff[20];
     sprintf(buff,"idl/%s/events",deviceId);
-    PSClient.beginPublish(buff,measureJson(*jsonMeasurements),false);
-    serializeJson(*jsonMeasurements,PSClient);
+    PSClient.beginPublish(buff,measureJson(*jsonEvents),false);
+    serializeJson(*jsonEvents,PSClient);
     PSClient.endPublish();
     
     // delete and forget
