@@ -1,5 +1,3 @@
-#include "Arduino.h"
-
 #include <ArduinoJson.h>
 
 #include "version.h"
@@ -11,8 +9,6 @@
 /***************************************************************************/
 // Industrial Data Logger networking implementation.
 #include <IDLNetworking.h>
-#define INTERVAL 1000 // time between loop
-unsigned long lastRead;
 
 /***************************************************************************/
 // OneWire and DS18B20 libraries
@@ -28,8 +24,6 @@ unsigned long lastRead;
 #define CS 15 // Assignment of the CS pin
 
 #include <SPI.h> // call library
-int recu[2]; // Storage of module data
-int lumiere;
 
 /***************************************************************************/
 /***************************************************************************/
@@ -162,54 +156,32 @@ void setup() {
     display.init();
     displayLoop(); 
 
-    lastRead = millis();
     Serial.println("Setup done");
 }
 
 
 void loop() {
     idl.loop();
-
-    if(millis() >= lastRead + INTERVAL){
-        lastRead = millis();
-
-        // Send command to all the sensors for temperature conversion
-        sensors.requestTemperatures();
-
-
-        // prepare a json buffer.
-        DynamicJsonBuffer jsonBuffer;
-        // create a root object
-        JsonObject &j_root = jsonBuffer.createObject();
-        // Set message type to measurement
-        j_root["type"] = "measurement";
-        // Create an object to store values
-        JsonObject &j_values = j_root.createNestedObject("values");
-        // Create a value object with the unit tag celsius and another one for light
-        JsonObject &j_c = j_values.createNestedObject("Celsius");
-        JsonObject &j_l = j_values.createNestedObject("Light");
-
-        // read the light value
-        j_l["value"] = readLuminance();
     
-        // Store and Display temperature from each sensor
-        for (int i = 0; i < deviceCount; i++){
-            tempC = sensors.getTempCByIndex(i);
-            sensors.getAddress(thermometer, i);
-
-            char hex_string[20] ;
-            array_to_string(thermometer, 8, hex_string);
-
-            //save to json. 
-            j_c[hex_string] = tempC ;
-            
-        }
-
-        idl.sendRaw("custom1", j_root);
-        j_root.prettyPrintTo(Serial);
-
-    }
-
     displayLoop();
+
+    idl.pushMeasurement("light","sensor 1","value",readLuminance());
+
+    // Send command to all the sensors for temperature conversion
+    sensors.requestTemperatures();
+    
+    // Store temperature from each sensor
+    for (int i = 0; i < deviceCount; i++){
+        tempC = sensors.getTempCByIndex(i);
+        sensors.getAddress(thermometer, i);
+
+        char hex_string[20] ;
+        array_to_string(thermometer, 8, hex_string);
+
+        idl.pushMeasurement("temperature",hex_string,"celcius",tempC);
+         
+    }    
+
+    idl.sendMeasurements();
 
 }
