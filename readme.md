@@ -31,19 +31,79 @@ esp32 devices and sensors
 ## MQTT namespaces and Datatypes
 Two high-level namespaces exist at the moment, `idl` and `idlota`
 
-### /idl topics
-Used for incoming events and metrics, `dash` assumes data is metric by default, but if the last part of the topic is `/event`, a special `Event` type is used which is stored a bit different compared to regular time-series data.
+### /idl/<deviceID>/<messageType>
+Used for incoming events and metrics, `dash` assumes data is metric by default. `<deviceID>`, is used to tag the data and `<messageType` is dictating the format of the json payload. Two message-type formats exists, `events` and `measurements`. Common for both formats is the massages are in an array with an object for each measurement and event. Be aware that the formats does not mix. One array must contain only one format type chosen by the MQTT toppic
 
-Examples of Metric topics and their payloads:
+**Examples of Metric topics and their payloads:**
 ```
-idl/1C8781/temperature      {"value": 49.299999, "unit":"*C"}
-idl/1C8781/pressure         {"value": 991.413147, "unit":"hPa"}
-idl/1C8781/humidity         {"value": 5.511719, "unit":"%RH"}
-idl/30E980/event            {"type": "btnGreenShort", "msg": "Green button single pressed"}
-idl/C4B3CC/temperature      {"value": 24.450001, "unit":"*C"}
-idl/C4B3CC/pressure         {"value": 992.548035, "unit":"hPa"}
-idl/C4B3CC/humidity         {"value": 31.458008, "unit":"%RH"}
+/idl/C4B3CC/measurements
+[
+    {       
+        "table": "temperature", // influxdb tabel
+        "name": "sensor 1", // influxdb tag
+        "unit": "celcius", // influxdb tag
+        "value": 23.34, // influxdb value
+    },
+]
 ```
+**Event message**
+```
+/idl/1C8781/events
+[
+    {       
+        "table": "events", // influxdb tabel
+        "msg": "someove pushed the red button", // human readable ish
+        "payload": "{blob}", // whatever one sees fit
+        "tags": { 
+            "color":"red",
+            "priority": "1",
+        }
+    },
+]
+```
+**Multiple measurements**
+```
+/idl/deviceId/measurements
+[
+    {       
+        "table": "microphone",
+        "name": "sensor1",
+        "unit": "dBm",
+        "value": 23.34,
+        "tags": { 
+            "band":"100hz",
+        }
+    },
+    {       
+        "table": "microphone",
+        "name": "sensor1",
+        "unit": "dBm",
+        "value": 23.34,
+        "tags": { 
+            "band":"100hz",
+        }
+    },
+    {       
+        "table": "microphone",
+        "name": "sensor2",
+        "unit": "dBm",
+        "value": 23.34,
+        "tags": { 
+            "band":"100hz",
+        }
+    },
+    {       
+        "table": "microphone",
+        "name": "sensor2",
+        "unit": "dBm",
+        "value": 23.34,
+        "tags": { 
+            "band":"100hz",
+        }
+    },
+]
+```
+
 
 ### /idlota topics
 These topics are used to announce firmware updates to running devices. There is no payload and publishes to this topic makes sure interested devices check the OTA service for updates.
