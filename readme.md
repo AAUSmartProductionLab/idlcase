@@ -39,10 +39,13 @@ Used for incoming events and metrics, `dash` assumes data is metric by default. 
 /idl/C4B3CC/measurements
 [
     {       
-        "table": "temperature", // influxdb tabel
-        "name": "sensor 1", // influxdb tag
-        "unit": "celcius", // influxdb tag
-        "value": 23.34, // influxdb value
+        "table": "temperature",     // influxdb tabel
+        "name": "sensor 1",         // influxdb tag
+        "unit": "celcius",          // influxdb tag
+        "value": 23.34,             // influxdb value
+        "tags":{                    // optional extra tags
+            "placement" : "kitchen"
+        }
     },
 ]
 ```
@@ -51,10 +54,10 @@ Used for incoming events and metrics, `dash` assumes data is metric by default. 
 /idl/1C8781/events
 [
     {       
-        "table": "events", // influxdb tabel
-        "msg": "someove pushed the red button", // human readable ish
-        "payload": "{blob}", // whatever one sees fit
-        "tags": { 
+        "table": "events",                      // influxdb tabel
+        "msg": "someone pushed the red button", // human readable 
+        "payload": "{blob}",                    // whatever one sees fit
+        "tags": {                               // optional extra tags
             "color":"red",
             "priority": "1",
         }
@@ -63,42 +66,48 @@ Used for incoming events and metrics, `dash` assumes data is metric by default. 
 ```
 **Multiple measurements**
 ```
-/idl/deviceId/measurements
+/idl/1C8781/measurements
 [
     {       
+        "table": "temperature",
+        "name": "BME280",
+        "unit": "celsius",
+        "value": 20.5,
+    },
+    {       
         "table": "microphone",
-        "name": "sensor1",
+        "name": "left channel",
         "unit": "dBm",
-        "value": 23.34,
+        "value": 42.47,
         "tags": { 
             "band":"100hz",
         }
     },
     {       
         "table": "microphone",
-        "name": "sensor1",
+        "name": "left channel",
         "unit": "dBm",
-        "value": 23.34,
+        "value": 51.25,
+        "tags": { 
+            "band":"200hz",
+        }
+    },
+    {       
+        "table": "microphone",
+        "name": "right channel",
+        "unit": "dBm",
+        "value": 42.87,
         "tags": { 
             "band":"100hz",
         }
     },
     {       
         "table": "microphone",
-        "name": "sensor2",
+        "name": "right channel",
         "unit": "dBm",
-        "value": 23.34,
+        "value": 50.15,
         "tags": { 
-            "band":"100hz",
-        }
-    },
-    {       
-        "table": "microphone",
-        "name": "sensor2",
-        "unit": "dBm",
-        "value": 23.34,
-        "tags": { 
-            "band":"100hz",
+            "band":"200hz",
         }
     },
 ]
