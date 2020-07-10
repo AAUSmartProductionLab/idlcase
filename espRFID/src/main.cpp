@@ -9,8 +9,6 @@
  *    ###    ### ###        ########### #########       
 *
 ****************************************************************************/
-const char DeviceType[] = "rfidReader";
-
 #define LED_PIN 2    
 #define PIEZO_PIN 13 
 #define IRQ_PIN 22   
@@ -23,7 +21,6 @@ const char DeviceType[] = "rfidReader";
 
 /***************************************************************************/
 //  default libraries 
-#include "Arduino.h"
 #include <SPI.h>
 #include <Wire.h>
 
@@ -38,12 +35,13 @@ const char DeviceType[] = "rfidReader";
 /***************************************************************************/
 // Industrial Data Logger networking implementation.
 #include <IDLNetworking.h>
+#include "version.h"
 
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
 
-IDLNetworking idlNetworking = IDLNetworking("rfidReader");
+IDLNetworking idl = IDLNetworking("espRFID", VERSION);
 /*=========================================================================*/
 // RFID reader instance
 MFRC522 mfrc522(CS_PIN,RST_PIN);
@@ -75,12 +73,6 @@ void displayLoop() {
 
 void setup(){
     Serial.begin(115200);
- 
-    //idlNetworking.reset();
-
-    SPI.begin();
-    mfrc522.PCD_Init();
-
 
     // pin setups
     pinMode(LED_PIN,OUTPUT);
@@ -96,8 +88,10 @@ void setup(){
 
     displayLoop(); 
 
-    idlNetworking.begin();
+    idl.begin();
 
+    SPI.begin();
+    mfrc522.PCD_Init();
 
 }
 
@@ -116,7 +110,7 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
 
 void loop() {
 
-  idlNetworking.loop();
+  idl.loop(0);
 
   displayLoop();
 
@@ -131,13 +125,15 @@ void loop() {
   // Dump UID
   char buff[30];
   array_to_string(mfrc522.uid.uidByte, mfrc522.uid.size, buff);
+  
+  char buff2[50];
+  sprintf(buff2,"hand held rfid scan of id:%s",buff);
 
-  idlNetworking.sendEvent("rfidRead","hand held scan", buff);
-
+  idl.pushEvent("events",buff2, buff);
+  idl.sendEvents();
   Serial.print(F("Card UID:"));
   Serial.print(buff);
 
   delay(500);
-
   
 }

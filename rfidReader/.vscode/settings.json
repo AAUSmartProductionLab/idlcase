@@ -1,6 +1,0 @@
-{
-    "terminal.integrated.env.osx": {
-        "PATH": "/Users/hjaltenielsen/.platformio/penv/bin:/Users/hjaltenielsen/.platformio/penv:/usr/local/opt/openvpn/sbin:/Users/hjaltenielsen/.nvm/versions/node/v11.0.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public",
-        "PLATFORMIO_CALLER": "vscode"
-    }
-}
