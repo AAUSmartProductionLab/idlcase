@@ -284,14 +284,14 @@ void IDLNetworking::mqttConnect() {
 
 
 /*===========================================================================*/
-JsonObject IDLNetworking::pushEvent(char *table, char *message, char *payload){
+JsonObject IDLNetworking::pushEvent(char *table, char *msg, char *payload){
     if(! jsonEvents){
         jsonEvents = new StaticJsonDocument<IDL_JSON_SIZE>();
     }
 
     JsonObject obj = jsonEvents->createNestedObject();
     obj["table"] = table;
-    obj["message"] = message;
+    obj["msg"] = msg;
     obj["payload"] = payload;
 
     return obj;
