@@ -1,0 +1,44 @@
+{
+    "name": "IDLNetworking",
+    "keywords": "FOTA, MQTT, esp32, logging, data, iot, iiot",
+    "description": "esp32 Library for Industrial Data Logger Networking",
+    "version": "0.1.0",
+    "frameworks": "arduino",
+    "platforms": "espressif32",
+    "authors":
+    [
+      {
+        "name": "Hjalte Nielsen",
+        "email": "hn@mp.aau.dk",
+        "maintainer": true
+      },
+      {
+        "name": "Kristian",
+        "email":"*"
+      }
+    ],
+    "dependencies": [
+      {
+        "name": "esp32FOTA",
+        "version": "0.1.2",
+        "author":"Chris Joyce",
+        "url":"https://github.com/chrisjoyce911/esp32FOTA",
+        "frameworks": "arduino"
+      },
+      {
+        "name": "PubSubClient",
+        "version": "2.7",
+        "frameworks": "arduino",
+        "author":"Nick O'Leary"
+      },
+      {
+        "name":"WifiManager",
+        "author":"tzapu",
+        "version":"https://github.com/tzapu/WiFiManager.git#development"
+      },
+      {
+        "name":"ArduinoJson",
+        "version":"6.15.2"
+      }
+    ]
+  }

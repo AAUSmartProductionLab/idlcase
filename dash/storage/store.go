@@ -3,8 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
-
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 	client "github.com/influxdata/influxdb1-client/v2"
 )
 
@@ -27,16 +26,15 @@ func NewStore() (*Store, error) {
 }
 
 // Add adds a received sensor message for storage
-func (s *Store) Add(m sensor.Message) error {
-	point, err := m.ToPoint()
+// FIXME: at some point, batching and store it every second or so
+func (s *Store) Add(m transport.Message) error {
+	point, err := m.Point()
 	if err != nil {
 		return fmt.Errorf("unable to create point from Message: %w", err)
 	}
 
-	// Create a new point batch
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: "idl",
-	})
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{})
+	bp.SetDatabase("idl")
 	bp.AddPoint(point)
 
 	err = s.Write(bp)

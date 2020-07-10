@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/ragroup/idlcase/dash/sensor"
+	"bitbucket.org/ragroup/idlcase/dash/transport"
 
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
@@ -28,7 +28,7 @@ type Sensor struct {
 // DisplayMessage knows about the previous value
 // and decides if the color should be red green or neutral
 type DisplayMessage struct {
-	sensor.Message
+	transport.Message
 
 	color *color.Color
 }
@@ -43,11 +43,11 @@ func (s *Sensor) Init() {
 }
 
 // Update handles sensor messages
-func (s *Sensor) Update(msg sensor.Message) {
+func (s *Sensor) Update(msg transport.Message) {
 	s.Lock()
 	defer s.Unlock()
 
-	lMsg, exists := s.lastMessages[msg.Metric()]
+	_, exists := s.lastMessages[msg.Metric()]
 
 	dMsg := &DisplayMessage{Message: msg, color: color.New(color.FgWhite)}
 	s.lastMessages[msg.Metric()] = dMsg
@@ -58,20 +58,6 @@ func (s *Sensor) Update(msg sensor.Message) {
 		s.metrics = append(s.metrics, msg.Metric())
 		sort.Strings(s.metrics)
 		return
-	}
-
-	n, err := msg.Data.Compare(lMsg.Data)
-	if err != nil {
-		// comparison errors are unforgivable
-		panic(err)
-	}
-
-	// default color is FgWhite
-	if n == 1 {
-		dMsg.color = color.New(color.FgGreen)
-	}
-	if n == -1 {
-		dMsg.color = color.New(color.FgRed)
 	}
 
 }
@@ -93,13 +79,10 @@ func (s *Sensor) render() {
 		for _, idx := range s.metrics {
 			lMsg := s.lastMessages[idx]
 
-			// we format the value seperatly, as the colors adds bytes which confuses precision and padding
-			valueFormat := fmt.Sprintf("%15.15s", lMsg.Data.PrettyValue())
-
 			fmt.Fprintf(s, "%-18.18s: %s %-4s %s\n",
 				lMsg.Metric(),
-				lMsg.color.Sprint(valueFormat),
-				lMsg.Data.PrettyUnit(),
+				lMsg.UIValue(),
+				lMsg.UIUnit(),
 				lMsg.Since(),
 			)
 		}

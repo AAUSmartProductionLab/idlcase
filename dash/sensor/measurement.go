@@ -1,51 +1,42 @@
 package sensor
 
-import "fmt"
+import (
+	"fmt"
 
+	client "github.com/influxdata/influxdb1-client/v2"
+)
+
+// Measurement represents some measured data
 type Measurement struct {
-	PrecisionValue *int `json:"precision"`
-	Value          float64
-	Unit           string
+	Message
+
+	Name  string
+	Unit  string
+	Value float64
 }
 
-// Precision defaults to 2 decimals
-func (m *Measurement) Precision() int {
-	if m.PrecisionValue == nil {
-		return 2
-	}
-	return *m.PrecisionValue
+func (m *Measurement) Metric() string {
+	return fmt.Sprintf("%s/%s/%s", m.deviceID, m.Table, m.Name)
 }
 
-func (m *Measurement) PrettyUnit() string {
+func (m *Measurement) UIValue() string {
+	return fmt.Sprintf("%f", m.Value)
+}
+func (m *Measurement) UIUnit() string {
 	return m.Unit
 }
 
-func (m *Measurement) PrettyValue() string {
-	precisionFormat := fmt.Sprintf("%%9.%df", m.Precision())
-	return fmt.Sprintf(precisionFormat, m.Value)
-}
+func (m *Measurement) Point() (*client.Point, error) {
+	tags := m.Tags
+	tags["name"] = m.Name
+	tags["unit"] = m.Unit
 
-func (m *Measurement) StoreTags(h map[string]string) {
-	h["unit"] = m.Unit
-}
-
-func (m *Measurement) StoreValues(h map[string]interface{}) {
-	h["value"] = m.Value
-}
-
-func (m *Measurement) Compare(d interface{}) (int, error) {
-	in, ok := d.(*Measurement)
-	if !ok {
-		return 0, fmt.Errorf("cannot compare %T to %T", d, m)
+	point, err := client.NewPoint(m.Table, tags, map[string]interface{}{
+		"value": m.Value,
+	}, *m.At)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create influxdb point: %s", err)
 	}
 
-	if in.Value == m.Value {
-		return 0, nil
-	}
-
-	if in.Value > m.Value {
-		return 1, nil
-	}
-
-	return -1, nil
+	return point, nil
 }
