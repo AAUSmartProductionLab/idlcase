@@ -36,7 +36,7 @@ void IDLNetworking::begin() {
 void IDLNetworking::loop(int interval) {
     unsigned long now = millis();
     if (now > lastPublish + interval){
-        Serial.println("WARNING: pubish interval exceeded");
+        interval != 0 ?: Serial.println("WARNING: pubish interval exceeded. Too much data to push within the given time.");
     }
     else{
         delay(lastPublish + interval - now);
