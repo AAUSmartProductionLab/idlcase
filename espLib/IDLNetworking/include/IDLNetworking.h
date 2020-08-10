@@ -30,7 +30,7 @@ class IDLNetworking {
     IDLNetworking(const char *_deviceType, int _version);
     //~IDLNetworking();
 
-    void loop(int frequency = 1);
+    void loop(int interval = 1000);
 
     void reset();
 
@@ -98,8 +98,8 @@ class IDLNetworking {
     // Function to check for updates.
     void tryOTA();
 
-    StaticJsonDocument<IDL_JSON_SIZE> *jsonMeasurements;
-    StaticJsonDocument<IDL_JSON_SIZE> *jsonEvents;
+    DynamicJsonDocument *jsonMeasurements;
+    DynamicJsonDocument *jsonEvents;
 
 };
 
