@@ -33,12 +33,15 @@ void IDLNetworking::begin() {
 
 /*===========================================================================*/
 // Loop function to update the IDLNetworking library
-void IDLNetworking::loop(int frequency) {
-    if (frequency > 0){
-        unsigned long t = millis() - lastPublish + (1.0/frequency)*1000;
-        if (t > 0) {delay(t);}
-        lastPublish = millis();
+void IDLNetworking::loop(int interval) {
+    unsigned long now = millis();
+    if (now > lastPublish + interval){
+        if (interval != 0) Serial.println("WARNING: pubish interval exceeded. Too much data to push within the given time.");
     }
+    else{
+        delay(lastPublish + interval - now);
+    }
+    lastPublish = now;
 
     if (!PSClient.connected()) {
         mqttConnect();
@@ -126,7 +129,7 @@ void IDLNetworking::readFileSystem() {
     configFile.readBytes(buf.get(), size);
     configFile.close();
 
-    StaticJsonDocument<2048> jsonDoc ;
+    DynamicJsonDocument jsonDoc(2048) ;
     auto error = deserializeJson(jsonDoc,buf.get());
     if (error) {
         Serial.println("failed to serialise json config. Using Default values...");
@@ -286,7 +289,7 @@ void IDLNetworking::mqttConnect() {
 /*===========================================================================*/
 JsonObject IDLNetworking::pushEvent(char *table, char *msg, char *payload){
     if(! jsonEvents){
-        jsonEvents = new StaticJsonDocument<IDL_JSON_SIZE>();
+        jsonEvents = new DynamicJsonDocument(IDL_JSON_SIZE);
     }
 
     JsonObject obj = jsonEvents->createNestedObject();
@@ -301,7 +304,7 @@ JsonObject IDLNetworking::pushEvent(char *table, char *msg, char *payload){
 /*===========================================================================*/
 JsonObject IDLNetworking::pushMeasurement(char *table, char *name, char *unit, float value){
     if(! jsonMeasurements){
-        jsonMeasurements = new StaticJsonDocument<IDL_JSON_SIZE>();
+        jsonMeasurements = new DynamicJsonDocument(IDL_JSON_SIZE);
     }
 
     JsonObject obj = jsonMeasurements->createNestedObject();
@@ -335,8 +338,9 @@ void IDLNetworking::sendMeasurements(){
     //serializeJsonPretty(*jsonMeasurements, Serial);
 
     // send measurements
-    char buff[25];
+    char buff[43];
     sprintf(buff,"idl/%s/measurements",deviceId);
+
     PSClient.beginPublish(buff,measureJson(*jsonMeasurements),false);
     serializeJson(*jsonMeasurements,PSClient);
     PSClient.endPublish();
