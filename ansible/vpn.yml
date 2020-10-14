@@ -3,14 +3,14 @@
   - case
   - cloud
   roles:
-    - gatherkeys
+    - { name: gatherkeys, tags: gatherkeys }
 
 - hosts: 
   - case
   roles:
-    - vpnclient
+    - { name: vpnclient, tags: vpnclient }
 
 - hosts: 
   - cloud
   roles:
-    - vpnserver
+    - { name: vpnserver, tags: vpnserver }
