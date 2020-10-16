@@ -25,3 +25,11 @@ all:
           wg0_ip_address: "10.14.47.3"
           hostapd_ssid: second-case
           hostapd_wpa_password: Aalborg9000Robotlab
+        10.14.47.4:
+          ansible_user: pi
+          ansible_become: yes
+          ansible_ssh_common_args: -F ssh_config
+          ansible_python_interpreter: /usr/bin/python3
+          wg0_ip_address: "10.14.47.4"
+          hostapd_ssid: grundfos-case
+          hostapd_wpa_password: Aalborg9000Robotlab

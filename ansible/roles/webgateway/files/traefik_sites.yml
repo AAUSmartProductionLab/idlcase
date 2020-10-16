@@ -24,6 +24,18 @@ http:
         certResolver: sample
       middlewares:
         - api-auth
+    grafana-grundfos:
+      rule: "Host(`grafana.grundfos.idl.mp.aau.dk`)"
+      service: grafana-grundfos
+      tls:
+        certResolver: sample
+    api-grundfos:
+      rule: "Host(`api.grundfos.idl.mp.aau.dk`)"
+      service: api-grundfos
+      tls:
+        certResolver: sample
+      middlewares:
+        - api-auth
     redirecttohttps:
       entryPoints: 
         - web
@@ -53,6 +65,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.14.47.3:9090/"
+    grafana-grundfos:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.4:3000/"
+    api-grundfos:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.4:9090/"
 
   middlewares:
     httpsredirect:
