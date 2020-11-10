@@ -18,6 +18,7 @@
 #define MISO_PIN 19 
 #define MOSI_PIN 23  
 #define CS_PIN 0 
+#define PIEZO_FREQ 2000
 
 /***************************************************************************/
 //  default libraries 
@@ -47,7 +48,7 @@ IDLNetworking idl = IDLNetworking("espRFID", VERSION);
 /*=========================================================================*/
 // RFID reader instance
 MFRC522 mfrc522(CS_PIN,RST_PIN);
-char myTag[30];
+char myTag[30] = "NO TAG";
 
 
 /*=========================================================================*/
@@ -63,6 +64,7 @@ SSD1306Wire display(0x3c, 5, 4);
 /**************************************************************************/
 // display loop
 void displayLoop() {
+  // Displays device information on the oled dispaly. 
     display.clear();
     if (WiFi.status() != WL_CONNECTED) {
         display.setFont(ArialMT_Plain_24);
@@ -82,6 +84,7 @@ void displayLoop() {
 }
 
 void displayTag(int showTime = 1000){
+  // Dislay the rfid tag on the screen for some time
   display.clear();
   display.setFont(ArialMT_Plain_24);
   display.drawString(0, 0, myTag);
@@ -90,8 +93,8 @@ void displayTag(int showTime = 1000){
 
 }
 
-void array_to_string(byte array[], unsigned int len, char buffer[])
-{
+void array_to_string(byte array[], unsigned int len, char buffer[]){
+  // Takes an array of bytes and prints them out as hex in a string
     for (unsigned int i = 0; i < len; i++)
     {
         byte nib1 = (array[i] >> 4) & 0x0F;
@@ -104,7 +107,8 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
 }
 
 void openWifiPortal() {
-    // piezo buzzer on of
+  // Small helper function that buzzez the pieco and opens the wifi portal
+    // piezo buzzer set frequenzy -> on -> off
     ledcSetup(0,3500,8);
     ledcWrite(0,50);
     delay(300);
@@ -112,7 +116,8 @@ void openWifiPortal() {
 
     idl.openWifiPortal();
     
-    ledcSetup(0,2000,8);
+    // reset piezo buzzer frequency 
+    ledcSetup(0,PIEZO_FREQ,8);
 
 }
 
@@ -122,23 +127,34 @@ void setup(){
     // pin setups
     pinMode(LED_PIN,OUTPUT);
     pinMode(PIEZO_PIN,OUTPUT);
-    pinMode(IRQ_PIN,INPUT);
+    pinMode(IRQ_PIN,INPUT); // not in use but may be needed by the mfrc522 lib
 
-    ledcSetup(0,2000,8);
+    ledcSetup(0,PIEZO_FREQ,8);
     ledcAttachPin(PIEZO_PIN,0);
 
     // Initialising the UI will init the display too.
     display.init();
 
+    // update the display with device id and status info.
     displayLoop(); 
 
+    // Begin the idl instance. This connects to wifi and takes care of 
+    // mqtt and messages and basically all networking.
     idl.begin();
 
+    // Begin the rfid instance. 
     SPI.begin();
     mfrc522.PCD_Init();
 
+    // Begin button instance. 
+    // Set function callback when the button is pressed. I made use of a
+    // lambda function to pass in the time it should display the tag
+    // information on the screen. 
     button.begin();
     button.onPressed( []{displayTag(1500);});
+    
+    // if the button is pressed upon boot it opens the wifi portal
+    // regardless of connection status. 
     button.read();
     if (button.isPressed()){
       openWifiPortal();
