@@ -5,8 +5,13 @@
 IDLNetworking::IDLNetworking(const char *_deviceType, int _version) 
     : fota(esp32FOTA(String(_deviceType), _version))
 {
+    
     deviceType = _deviceType;
     version = _version;
+  
+    // initialize more values. 
+    sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
+    sprintf(versionString, "Version: %d", version);
 }
 
 /*===========================================================================*/
@@ -14,10 +19,6 @@ IDLNetworking::IDLNetworking(const char *_deviceType, int _version)
 void IDLNetworking::begin() {
     // First Read the filesystem to get saved values.
     readFileSystem();
-
-    // initialize values. 
-    sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
-    sprintf(versionString, "Version: %d", version);
 
     wifiPortal();
     writeFileSystem();
