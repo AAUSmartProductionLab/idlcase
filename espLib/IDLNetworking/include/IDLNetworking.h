@@ -51,6 +51,7 @@ class IDLNetworking {
 
     char *getVersionString() { return versionString; }
 
+    void openWifiPortal(int timeout = 180){wifiPortal(timeout, false); }
 
   private:
     // A constant string depicting the device type this is
@@ -65,7 +66,7 @@ class IDLNetworking {
     bool usingDefaults = false;
 
     // wifiManager portal and flash read/write functions.
-    void wifiPortal(int timeout = 300); /* default 5 minutes*/
+    void wifiPortal(int timeout = 300, bool autoConnect = true); /* default 5 minutes*/
     void readFileSystem();
     void writeFileSystem();
 
