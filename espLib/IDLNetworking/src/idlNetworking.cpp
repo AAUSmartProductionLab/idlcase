@@ -5,8 +5,13 @@
 IDLNetworking::IDLNetworking(const char *_deviceType, int _version) 
     : fota(esp32FOTA(String(_deviceType), _version))
 {
+    
     deviceType = _deviceType;
     version = _version;
+  
+    // initialize more values. 
+    sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
+    sprintf(versionString, "Version: %d", version);
 }
 
 /*===========================================================================*/
@@ -14,10 +19,6 @@ IDLNetworking::IDLNetworking(const char *_deviceType, int _version)
 void IDLNetworking::begin() {
     // First Read the filesystem to get saved values.
     readFileSystem();
-
-    // initialize values. 
-    sprintf(deviceId, "%06X", (uint)(ESP.getEfuseMac() >> 24));
-    sprintf(versionString, "Version: %d", version);
 
     wifiPortal();
     writeFileSystem();
@@ -38,9 +39,10 @@ void IDLNetworking::loop(int interval) {
     if (now > lastPublish + interval){
         if (interval != 0) Serial.println("WARNING: pubish interval exceeded. Too much data to push within the given time.");
     }
-    else{
-        delay(lastPublish + interval - now);
+    while (millis() < lastPublish + interval){
+        // do nothing
     }
+
     lastPublish = now;
 
     if (!PSClient.connected()) {
@@ -198,7 +200,7 @@ void IDLNetworking::writeFileSystem() {
 }
 
 /*===========================================================================*/
-void IDLNetworking::wifiPortal(int timeout) {
+void IDLNetworking::wifiPortal(int timeout, bool autoConnect) {
     WiFiManagerParameter custom_text0("<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>Use defaults</b></p>");
     WiFiManagerParameter customUseingDefaults("useingDefaults", "use defaults below", 0, 1);
     WiFiManagerParameter custom_text1("<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>MQTT settings</b></p>");
@@ -238,7 +240,11 @@ void IDLNetworking::wifiPortal(int timeout) {
     char buf[30];
     sprintf(buf, "CONFIGURE ME - %s", deviceId);
     delay(200);
-    wifiManager.autoConnect(buf);
+    if (autoConnect) {
+        wifiManager.autoConnect(buf);
+    }else{
+        wifiManager.startConfigPortal(buf);
+    }
 
     // read updated parameters. Might not have changed but it should be safe
     // to update them again.
@@ -247,8 +253,13 @@ void IDLNetworking::wifiPortal(int timeout) {
     strcpy(otaServer, customOtaServer.getValue());
     strcpy(otaTopic, customOtaTopic.getValue());
 
-    if (customUseingDefaults.getValue())
+    if (customUseingDefaults.getValue() == "true"){
+        Serial.println("using default values for MQTT and OTA server");
         usingDefaults = true;
+    }    
+    else{ 
+        usingDefaults = false;
+    }
 
     Serial.println("local ip");
     Serial.println(WiFi.localIP());
@@ -265,7 +276,9 @@ void IDLNetworking::mqttConnect() {
     if (WiFi.status() != WL_CONNECTED) {
         // TODO connectToWiFi();
     }
-    Serial.print("Attempting MQTT connection...");
+    char announcement[128];
+    sprintf(announcement,"Attempting MQTT connection to server: %s...", MQTTServer);
+    Serial.print(announcement);
 
     // Attempt to connect
     if (PSClient.connect(deviceId)) {
@@ -273,8 +286,7 @@ void IDLNetworking::mqttConnect() {
         PSClient.subscribe(otaTopic);
 
         // announce the subscribe toppic on serial for debug
-        char announcement[128];
-        sprintf(announcement, "Subscribing on MQTT topic: %s \nPublishing on MQTT topic: /idl/%s/<messageType>", otaTopic, deviceId);
+        sprintf(announcement, "Subscribing on MQTT topic: %s \nPublishing on MQTT topic: idl/%s/<messageType>", otaTopic, deviceId);
         Serial.println(announcement);
 
     } else {
@@ -358,7 +370,7 @@ void IDLNetworking::sendEvents(){
     //serializeJsonPretty(*jsonEvents, Serial);
     
     // send events
-    char buff[20];
+    char buff[25];
     sprintf(buff,"idl/%s/events",deviceId);
     PSClient.beginPublish(buff,measureJson(*jsonEvents),false);
     serializeJson(*jsonEvents,PSClient);
