@@ -26,6 +26,8 @@ When a developer wants to upload new firmware, `idlversion` and `idluploader` he
 Our Library IDLNetworking makes use of [tzapu's wifimanager](https://github.com/tzapu/WiFiManager/tree/development). If the ESP device cannot connect to a known wifi it will start the wifimanager. The device will create a hotspot named "CONFIGURE ME - 12AB34" with the ending being the device ID. When connecting to this hotspot all traffic will be routed to a configuration portal that can be accecced with any browser. Connecting from an Android device this portal pops up by itself via a notification. Is that not the case the portal can be accessed on ip address `192.168.1.4`. 
 From the portal it is possible to select any nearby access point and type in the password for it. As well as selecting access point it is also possible to set the MQTT server and port to publish on. Finally you can set the server where the ESP-device will check for firmware updates.
 Writing `true` into the field named "use defaults below" will set MQTT and firmware server to the ip of gateway.
+The protal is kept open for 5 minutes before the device tries to connect to known wifi again.  
+Known bugs: wifimanager opens the configuration portal on every other reset. See issue [#1067](https://github.com/tzapu/WiFiManager/issues/1067) for updates. 
 
 
 ## BOM
