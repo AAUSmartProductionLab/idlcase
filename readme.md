@@ -22,6 +22,12 @@ To solve these scenarios, the `dash/` projects host simple JSON files describing
 
 When a developer wants to upload new firmware, `idlversion` and `idluploader` helps figuring out what version number to use next, when running "Upload" it will upload the firmware to the IDL case and publish a message on MQTT which devices listen to. Devices then to the regular OTA update just as if hey where cold booted.
 
+## WifiManager
+Our Library IDLNetworking makes use of [tzapu's wifimanager](https://github.com/tzapu/WiFiManager/tree/development). If the ESP device cannot connect to a known wifi it will start the wifimanager. The device will create a hotspot named "CONFIGURE ME - 12AB34" with the ending being the device ID. When connecting to this hotspot all traffic will be routed to a configuration portal that can be accecced with any browser. Connecting from an Android device this portal pops up by itself via a notification. Is that not the case the portal can be accessed on ip address `192.168.1.4`. 
+From the portal it is possible to select any nearby access point and type in the password for it. As well as selecting access point it is also possible to set the MQTT server and port to publish on. Finally you can set the server where the ESP-device will check for firmware updates.
+Writing `true` into the field named "use defaults below" will set MQTT and firmware server to the ip of gateway.
+
+
 ## BOM
 Raspberry Pi
 Raspberry Pi display
