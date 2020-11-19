@@ -18,12 +18,12 @@ In order to force the hotspot and captive portal to start, press and hold the bu
 In order to access the portal connect to the created hotspot named 'CONFIGURE ME - 12AB34'  with the ending being the device ID. When connecting to this hotspot all traffic will be routed to a configuration portal that can be accecced with any browser. Connecting from an Android device this portal pops up by itself via a notification. Is that not the case the portal can be accessed on ip address `192.168.1.4`. 
 
 ### MQTT data format
-**Examples of topics and the payload**
+Example of topic and the payload
 ```
 /idl/1C8781/events
 [
     {       
-        "table": "events",                             // influxdb tabel
+        "table": "events",                             // influxdb table
         "msg": "handheld rfid scan of id:A4 B5 C6",    // human readable version
         "payload": "A4 B5 C6",                         // UID of rfid tag
     },
