@@ -1,0 +1,3 @@
+Host energy01
+    HostName 192.168.1.173
+    UserKnownHostsFile /known_hosts

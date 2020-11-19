@@ -1,0 +1,6 @@
+---
+- hosts: energy
+  roles:
+    - { name: common, tags: common }
+    - { name: users, tags: users }
+    - { name: hostapd, tags: hostapd }
