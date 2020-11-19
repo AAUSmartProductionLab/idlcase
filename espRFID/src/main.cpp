@@ -182,7 +182,7 @@ void loop() {
 
 
   char buff2[50];
-  sprintf(buff2,"hand held rfid scan of id:%s",myTag);
+  sprintf(buff2,"handheld rfid scan of id:%s",myTag);
 
   idl.pushEvent("events",buff2, myTag);
   idl.sendEvents();
