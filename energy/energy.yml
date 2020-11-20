@@ -1,5 +1,13 @@
 ---
 - hosts: energy
+  vars_prompt:
+    - name: wpa_supplicant_ssid
+      prompt: "SSID"
+      private: no
+
+    - name: wpa_supplicant_passphrase
+      prompt: "Passphrase"
+      private: no
   roles:
     - { name: common, tags: common }
     - { name: users, tags: users }

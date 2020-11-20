@@ -41,6 +41,17 @@
     src: ap0.network
     dest: /etc/systemd/network/10-ap0.network
 
+- name: wlan0 wpa_supplicant
+  template:
+    src: wpa_supplicant-wlan0.conf.j2
+    dest: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+
+- name: enable wpa_supplicant on wlan0
+  service:
+    name: wpa_supplicant@wlan0
+    state: started
+    enabled: true
+
 - name: remove ifupdown (included with raspbian)
   apt:
     name: ifupdown
