@@ -1,0 +1,9 @@
+[Unit]
+Description=mbmd
+
+[Service]
+ExecStart=/opt/mbmd/mbmd run --baudrate 38400 -a /dev/ttyUSB0 -d sdm:1 --influx-database mbmd --influx-measurement sdm630 --influx-url http://10.13.37.1:8086 --rate 1s --mqtt-broker tcp://10.13.37.1:1883
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

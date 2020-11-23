@@ -9,6 +9,7 @@
       prompt: "Passphrase"
       private: no
   roles:
-    - { name: common, tags: common }
-    - { name: users, tags: users }
-    - { name: networking, tags: networking }
+    - { name: common,       tags: common }
+    - { name: users,        tags: users }
+    - { name: networking,   tags: networking }
+    - { name: mbmd,         tags: mbmd }
