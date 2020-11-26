@@ -6,7 +6,7 @@
 
 - name: install mbmd
   unarchive:
-    src: https://github.com/volkszaehler/mbmd/releases/download/0.13/mbmd_0.13_linux_armv6.tar.gz
+    src: https://github.com/volkszaehler/mbmd/releases/download/0.12/mbmd_0.12_linux_armv6.tar.gz
     dest: /opt/mbmd
     remote_src: yes
 
