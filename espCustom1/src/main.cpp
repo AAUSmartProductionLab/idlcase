@@ -21,11 +21,10 @@
 #define NUMBER_OF_THERMOMETERS 8
 
 /***************************************************************************/
-#define CS 15 // Assignment of the CS pin
+#include <Wire.h>
+//#include <Adafruit_Sensor.h>
+#include "Adafruit_TSL2591.h"
 
-#include <SPI.h> // call library
-
-/***************************************************************************/
 /***************************************************************************/
 
 
@@ -39,10 +38,15 @@ DallasTemperature sensors(&oneWire);
 int deviceCount = 0;
 
 // Variable to hold temporary device addresses
-DeviceAddress thermometer;
+DeviceAddress thermoAdr;
 
 // Variable to hold temporary temperature values 
 float tempC; 
+
+/*=========================================================================*/
+// lux sensor instance
+TwoWire I2CLight = TwoWire(1);
+Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591);
 
 /*=========================================================================*/
 // IDLNetworking instance
@@ -70,17 +74,9 @@ void displayLoop() {
     display.display();
 }
 
+
 /*=========================================================================*/
-// read the light sensor. 
-uint16_t readLuminance(){
-    digitalWrite(CS, LOW); // activation of CS line
-    uint16_t data = SPI.transfer16(0); 
-    digitalWrite(CS, HIGH); // deactivation of CS line
-    data = data >> 4; // reduce to 12 bit's of data TODO there might actually only be 11 bits 
-    return data;
-}
-/*=========================================================================*/
-// printing a thermometer address
+// printing a thermometer address as string
 void printAddress(DeviceAddress deviceAddress)
 { 
   for (uint8_t i = 0; i < 8; i++)
@@ -94,6 +90,7 @@ void printAddress(DeviceAddress deviceAddress)
 }
 
 /*=========================================================================*/
+// Char array printed as string of hex
 void array_to_string(byte array[], unsigned int len, char buffer[])
 {
     for (unsigned int i = 0; i < len; i++)
@@ -105,16 +102,26 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
     }
     buffer[len*2] = '\0';
 }
-/*=========================================================================*/
 
-// dallas temperature sensors setup
+
+/*=========================================================================*/
+// struct to hold light data
+struct lightData{
+    uint16_t full;
+    uint16_t ir;
+    uint16_t visible;
+    float lux;
+} myLightData;
+
+/*=========================================================================*/
+// dallas temperature sensors and tls light sensor setup
 void sensorsSetup() {
     sensors.begin();
 
     // locate devices on the bus
     Serial.print("Locating devices...");
     Serial.print("Found ");
-    deviceCount = 3;//sensors.getDeviceCount();
+    deviceCount = sensors.getDeviceCount();
     Serial.print(deviceCount, DEC);
     Serial.println(" devices.");
     Serial.println("");
@@ -124,22 +131,82 @@ void sensorsSetup() {
         Serial.print("Sensor ");
         Serial.print(i + 1);
         Serial.print(" : ");
-        sensors.getAddress(thermometer, i);
-        printAddress(thermometer);
+        sensors.getAddress(thermoAdr, i);
+        printAddress(thermoAdr);
 
         // set the resolution to x bit per device
-        sensors.setResolution(thermometer, TEMPERATURE_PRECISION);
+        sensors.setResolution(thermoAdr, TEMPERATURE_PRECISION);
     }
+    
+    // lux sensor
+    I2CLight.begin(21,22);
+    tsl.begin(&I2CLight);
+    
+    // You can change the gain on the fly, to adapt to brighter/dimmer light situations
+    tsl.setGain(TSL2591_GAIN_LOW);      
+ 
+    // Changing the integration time gives you a longer time over which to sense light
+    // longer timelines are slower, but are good in very low light situtations!
+    tsl.setTiming(TSL2591_INTEGRATIONTIME_300MS);
 
-    // setup SPI for the Ambient Light Sensor.    
-    delay(500);
-    SPI.begin(14,12,13,15);                // initialization of SPI port
-    SPI.setDataMode(SPI_MODE3); // configuration of SPI communication in mode 0
-    SPI.setClockDivider(SPI_CLOCK_DIV8); // configuration of clock at 1MHz
-    pinMode(CS, OUTPUT);
+    // Print some useful sensor details 
+    sensor_t sensor;
+    tsl.getSensor(&sensor);
+    Serial.println(F("------------------------------------"));
+    Serial.print  (F("Sensor:       ")); Serial.println(sensor.name);
+    Serial.print  (F("Driver Ver:   ")); Serial.println(sensor.version);
+    Serial.print  (F("Unique ID:    ")); Serial.println(sensor.sensor_id);
+    Serial.print  (F("Max Value:    ")); Serial.print(sensor.max_value); Serial.println(F(" lux"));
+    Serial.print  (F("Min Value:    ")); Serial.print(sensor.min_value); Serial.println(F(" lux"));
+    Serial.print  (F("Resolution:   ")); Serial.print(sensor.resolution, 4); Serial.println(F(" lux"));  
+    Serial.println(F(""));
+    /* Display the gain and integration time for reference sake */  
+    Serial.print  (F("Gain:         "));
+    tsl2591Gain_t gain = tsl.getGain();
+    switch(gain)
+    {
+        case TSL2591_GAIN_LOW:
+        Serial.println(F("1x (Low)"));
+        break;
+        case TSL2591_GAIN_MED:
+        Serial.println(F("25x (Medium)"));
+        break;
+        case TSL2591_GAIN_HIGH:
+        Serial.println(F("428x (High)"));
+        break;
+        case TSL2591_GAIN_MAX:
+        Serial.println(F("9876x (Max)"));
+        break;
+    }
+    Serial.print  (F("Timing:       "));
+    Serial.print((tsl.getTiming() + 1) * 100, DEC); 
+    Serial.println(F(" ms"));
+    Serial.println(F("------------------------------------"));
+    Serial.println(F(""));
 
 
+}
 
+/*=========================================================================*/
+// Read IR and Full Spectrum at once and convert to lux
+void readLightSensor(void)
+{
+  // More advanced data read example. Read 32 bits with top 16 bits IR, bottom 16 bits full spectrum
+  // That way you can do whatever math and comparisons you want!
+  uint32_t lum = tsl.getFullLuminosity();
+  uint16_t ir, full;
+  ir = lum >> 16;
+  full = lum & 0xFFFF;
+  myLightData.full = full;
+  myLightData.ir = ir;
+  myLightData.visible = full-ir;
+  myLightData.lux = tsl.calculateLux(full,ir);
+
+//   Serial.print(F("[ ")); Serial.print(millis()); Serial.print(F(" ms ] "));
+//   Serial.print(F("IR: ")); Serial.print(ir);  Serial.print(F("  "));
+//   Serial.print(F("Full: ")); Serial.print(full); Serial.print(F("  "));
+//   Serial.print(F("Visible: ")); Serial.print(full - ir); Serial.print(F("  "));
+//   Serial.print(F("Lux: ")); Serial.println(tsl.calculateLux(full, ir), 6);
 }
 
 /*=========================================================================*/
@@ -149,7 +216,6 @@ void setup() {
     delay(100);
     
     sensorsSetup();
-
     idl.begin();
 
     // Initialising the UI will init the display too.
@@ -160,12 +226,12 @@ void setup() {
 }
 
 
+/*=========================================================================*/
+// esp infinite loop
 void loop() {
-    idl.loop();
+    idl.loop(2000);
     
-    displayLoop();
-
-    idl.pushMeasurement("light","sensor 1","value",readLuminance());
+    // displayLoop();
 
     // Send command to all the sensors for temperature conversion
     sensors.requestTemperatures();
@@ -173,14 +239,21 @@ void loop() {
     // Store temperature from each sensor
     for (int i = 0; i < deviceCount; i++){
         tempC = sensors.getTempCByIndex(i);
-        sensors.getAddress(thermometer, i);
+        sensors.getAddress(thermoAdr, i);
 
         char hex_string[20] ;
-        array_to_string(thermometer, 8, hex_string);
+        array_to_string(thermoAdr, 8, hex_string);
 
         idl.pushMeasurement("temperature",hex_string,"celcius",tempC);
          
-    }    
+    }
+
+    // read light sensor 
+    readLightSensor();
+
+    idl.pushMeasurement("light","sensor 1", "raw_full",myLightData.full);
+    idl.pushMeasurement("light","sensor 1", "raw_ir", myLightData.ir);
+    idl.pushMeasurement("light","sensor 1", "lux", myLightData.lux);
 
     idl.sendMeasurements();
 

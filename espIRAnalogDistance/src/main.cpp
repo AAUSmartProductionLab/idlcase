@@ -1,23 +1,25 @@
 /**************************************************************************
-*
- *          :::::::::  :::::::::: ::::::::::: ::::::::: 
- *         :+:    :+: :+:            :+:     :+:    :+: 
- *        +:+    +:+ +:+            +:+     +:+    +:+  
- *       +#++:++#:  :#::+::#       +#+     +#+    +:+   
- *      +#+    +#+ +#+            +#+     +#+    +#+    
- *     #+#    #+# #+#            #+#     #+#    #+#     
- *    ###    ### ###        ########### #########       
+*   
+ *         ::::::::::: :::::::::              :::     ::::    :::     :::     :::        ::::::::   ::::::::    
+ *            :+:     :+:    :+:           :+: :+:   :+:+:   :+:   :+: :+:   :+:       :+:    :+: :+:    :+:    
+ *           +:+     +:+    +:+          +:+   +:+  :+:+:+  +:+  +:+   +:+  +:+       +:+    +:+ +:+            
+ *          +#+     +#++:++#:          +#++:++#++: +#+ +:+ +#+ +#++:++#++: +#+       +#+    +:+ :#:             
+ *         +#+     +#+    +#+         +#+     +#+ +#+  +#+#+# +#+     +#+ +#+       +#+    +#+ +#+   +#+#       
+ *        #+#     #+#    #+#         #+#     #+# #+#   #+#+# #+#     #+# #+#       #+#    #+# #+#    #+#        
+ *   ########### ###    ###         ###     ### ###    #### ###     ### ########## ########   ########          
+ *         ::::::::: ::::::::::: :::::::: ::::::::::: :::     ::::    :::  ::::::::  ::::::::::                 
+ *        :+:    :+:    :+:    :+:    :+:    :+:   :+: :+:   :+:+:   :+: :+:    :+: :+:                         
+ *       +:+    +:+    +:+    +:+           +:+  +:+   +:+  :+:+:+  +:+ +:+        +:+                          
+ *      +#+    +:+    +#+    +#++:++#++    +#+ +#++:++#++: +#+ +:+ +#+ +#+        +#++:++#                      
+ *     +#+    +#+    +#+           +#+    +#+ +#+     +#+ +#+  +#+#+# +#+        +#+                            
+ *    #+#    #+#    #+#    #+#    #+#    #+# #+#     #+# #+#   #+#+# #+#    #+# #+#                             
+ *   ######### ########### ########     ### ###     ### ###    ####  ########  ##########        
 *
 ****************************************************************************/
 #define LED_PIN 2    
-#define PIEZO_PIN 13 
-#define IRQ_PIN 22   
+#define PIEZO_PIN 13  
 #define BTN_PIN 26    
-#define RST_PIN 17    
-#define SCLK_PIN 18   
-#define MISO_PIN 19 
-#define MOSI_PIN 23  
-#define CS_PIN 0 
+#define IR_ANALOG_PIN 34
 #define PIEZO_FREQ 2000
 
 /***************************************************************************/
@@ -26,8 +28,8 @@
 #include <Wire.h>
 
 /***************************************************************************/
-// RFID reader MFRC522
-#include <MFRC522.h>
+// Distance sensor 
+#include <ESP32SharpIR.h>
 
 /***************************************************************************/
 // oled screen
@@ -47,9 +49,7 @@
 IDLNetworking idl = IDLNetworking("espRFID", VERSION);
 /*=========================================================================*/
 // RFID reader instance
-MFRC522 mfrc522(CS_PIN,RST_PIN);
-char myTag[30] = "NO TAG";
-
+ESP32SharpIR sharp(ESP32SharpIR::GP2Y0A21YK0F, IR_ANALOG_PIN);
 
 /*=========================================================================*/
 // easy button instance
@@ -83,27 +83,14 @@ void displayLoop() {
     display.display();
 }
 
-void displayTag(int showTime = 1000){
+void displayDist(int dist){
   // Dislay the rfid tag on the screen for some time
   display.clear();
   display.setFont(ArialMT_Plain_24);
-  display.drawString(0, 0, myTag);
+  char buff[10] ;
+  sprintf(buff,"%d cm", dist);
+  display.drawString(0, 0, String(buff));
   display.display();
-  delay(showTime);
-
-}
-
-void array_to_string(byte array[], unsigned int len, char buffer[]){
-  // Takes an array of bytes and prints them out as hex in a string
-    for (unsigned int i = 0; i < len; i++)
-    {
-        byte nib1 = (array[i] >> 4) & 0x0F;
-        byte nib2 = (array[i] >> 0) & 0x0F;
-        buffer[i*3+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
-        buffer[i*3+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
-        buffer[i*3+2] = ' ';
-    }
-    buffer[len*2] = '\0';
 }
 
 void openWifiPortal() {
@@ -127,7 +114,6 @@ void setup(){
     // pin setups
     pinMode(LED_PIN,OUTPUT);
     pinMode(PIEZO_PIN,OUTPUT);
-    pinMode(IRQ_PIN,INPUT); // not in use but may be needed by the mfrc522 lib
 
     ledcSetup(0,PIEZO_FREQ,8);
     ledcAttachPin(PIEZO_PIN,0);
@@ -142,16 +128,11 @@ void setup(){
     // mqtt and messages and basically all networking.
     idl.begin();
 
-    // Begin the rfid instance. 
-    SPI.begin();
-    mfrc522.PCD_Init();
-
     // Begin button instance. 
     // Set function callback when the button is pressed. I made use of a
     // lambda function to pass in the time it should display the tag
     // information on the screen. 
     button.begin();
-    button.onPressed( []{displayTag(1500);});
     
     // if the button is pressed upon boot it opens the wifi portal
     // regardless of connection status. 
@@ -165,48 +146,30 @@ void loop() {
 
   idl.loop(0);
 
-  displayLoop();
-
   button.read();
-
-  if ( ! mfrc522.PICC_IsNewCardPresent() || ! mfrc522.PICC_ReadCardSerial() ) {
-    delay(50);
+  if (! button.isPressed()) {
+    // display device info
+    displayLoop();
+    // led off
+    digitalWrite(LED_PIN,LOW);
+    delay(30);
     return;
   }
 
-  // only here if card is pressent. 
-
-
-  // Dump UID
-  array_to_string(mfrc522.uid.uidByte, mfrc522.uid.size, myTag);
-
-
-  char buff2[50];
-  sprintf(buff2,"hand held rfid scan of id:%s",myTag);
-
-  idl.pushEvent("events",buff2, myTag);
-  idl.sendEvents();
-  Serial.print(F("Card UID:"));
-  Serial.print(myTag);
-
-  // piezo buzzer on
-  ledcWrite(0,50);
+  // only here if button is pressed. 
   // led on
   digitalWrite(LED_PIN,HIGH);
-  // display on screen
-  displayTag(0); 
-  // led and piezo time
-  delay(300);
-  // piezo buzzer off
-  ledcWrite(0,0);
 
-  while(button.isPressed()){
-    // keey the display on
-    delay(10);
-    button.read();
-  }
+  int dist = sharp.getDistance();
 
-  // led off
-  digitalWrite(LED_PIN,LOW);
+  idl.pushMeasurement("distance","ir_analog","cm", dist);
+  idl.sendMeasurements();
   
+  Serial.print(F("Distance: "));
+  Serial.println(dist);
+
+  // display on screen
+  displayDist(dist);
+  delay(250); 
+
 }
