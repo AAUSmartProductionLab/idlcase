@@ -112,14 +112,14 @@ void IDLNetworking::readFileSystem() {
     } 
     if (!SPIFFS.exists("/config.json")){
         Serial.println("/config.json file does not yet exist. Add some date via the WiFi portal. Until then default values are used.");
-        usingDefaults = true;
+        strcpy(usingDefaults , "true");
         return ;        
     }
     // file exists, reading and loading
     File configFile = SPIFFS.open("/config.json", "r");
     if(! configFile) {
         Serial.println("Failed to open /config.json - Using default values");
-        usingDefaults = true;
+        strcpy(usingDefaults , "true");
         return ;
     }
 
@@ -135,7 +135,7 @@ void IDLNetworking::readFileSystem() {
     auto error = deserializeJson(jsonDoc,buf.get());
     if (error) {
         Serial.println("failed to serialise json config. Using Default values...");
-        usingDefaults = true;
+        strcpy(usingDefaults , "true");
         return;
     }   
 
@@ -202,7 +202,7 @@ void IDLNetworking::writeFileSystem() {
 /*===========================================================================*/
 void IDLNetworking::wifiPortal(int timeout, bool autoConnect) {
     WiFiManagerParameter custom_text0("<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>Use defaults</b></p>");
-    WiFiManagerParameter customUseingDefaults("useingDefaults", "use defaults below", 0, 1);
+    WiFiManagerParameter customUseingDefaults("useingDefaults", "use defaults below", usingDefaults, 6);
     WiFiManagerParameter custom_text1("<hr/><p style=\"margin-bottom:0em; margin-top:1em;\"><b>MQTT settings</b></p>");
     WiFiManagerParameter customMQTTServer("MQTTServer", "mqtt server", MQTTServer, 40);
     WiFiManagerParameter customMQTTPort("port", "mqtt port", MQTTPort, 5);
@@ -252,14 +252,12 @@ void IDLNetworking::wifiPortal(int timeout, bool autoConnect) {
     strcpy(MQTTPort, customMQTTPort.getValue());
     strcpy(otaServer, customOtaServer.getValue());
     strcpy(otaTopic, customOtaTopic.getValue());
+    strcpy(usingDefaults, customUseingDefaults.getValue());
 
-    if (customUseingDefaults.getValue() == "true"){
+    if ( strcmp(usingDefaults, "true") == 0){  // evaluate to 0 if there is no difference between the strings
         Serial.println("using default values for MQTT and OTA server");
-        usingDefaults = true;
+        setDefaults();
     }    
-    else{ 
-        usingDefaults = false;
-    }
 
     Serial.println("local ip");
     Serial.println(WiFi.localIP());
@@ -267,7 +265,6 @@ void IDLNetworking::wifiPortal(int timeout, bool autoConnect) {
     Serial.println(WiFi.subnetMask());
 
     writeFileSystem();
-    if (usingDefaults){setDefaults();}
 }
 
 /*===========================================================================*/
