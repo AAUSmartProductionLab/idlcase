@@ -1,0 +1,90 @@
+---
+- name: add rule to setup access point interface
+  template:
+    src: 70-persistent-net.rules.j2
+    dest: /etc/udev/rules.d/70-persistent-net.rules
+
+- name: install hostapd
+  apt:
+    name: hostapd
+    state: present
+    force_apt_get: true
+
+- name: configure hostapd
+  template:
+    src: hostapd.conf.j2
+    dest: /etc/hostapd/hostapd.conf
+  register: hostapdconf
+
+- name: enable hostapd
+  service:
+    name: hostapd
+    masked: false
+    enabled: true
+    state: started
+
+- name: (re)start hostapd
+  service:
+    name: hostapd
+    state: restarted
+  when: hostapdconf.changed
+
+# Notice the naming scheme: ap0 needs to come up before wlan
+# otherwise the kernel driver seems to break and lock up until the system is rebooted
+- name: set wlan0 configuration
+  copy:
+    src: wlan0.network
+    dest: /etc/systemd/network/20-wlan0.network
+
+- name: set ap0 configuration
+  copy:
+    src: ap0.network
+    dest: /etc/systemd/network/10-ap0.network
+
+- name: wlan0 wpa_supplicant
+  template:
+    src: wpa_supplicant-wlan0.conf.j2
+    dest: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+
+- name: enable wpa_supplicant on wlan0
+  service:
+    name: wpa_supplicant@wlan0
+    state: started
+    enabled: true
+
+- name: remove ifupdown (included with raspbian)
+  apt:
+    name: ifupdown
+    state: absent
+    force_apt_get: true
+
+# dhcpcd conflicts with networkd
+- name: disable dhcpcd
+  service:
+    name: dhcpcd
+    state: stopped
+    masked: true
+
+- name: enable networkd
+  service:
+    name: systemd-networkd
+    state: started
+    enabled: true
+
+- name: install dnsmasq
+  apt:
+    name: dnsmasq
+    state: present
+    force_apt_get: true
+
+- name: configure dnsmasq
+  copy:
+    src: ap0.dnsmasq.conf
+    dest: /etc/dnsmasq.d/ap0.conf
+  register: hostapddnsmasq
+
+- name: restart dnsmasq
+  service:
+    name: dnsmasq
+    state: restarted
+  when: hostapddnsmasq.changed

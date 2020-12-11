@@ -33,3 +33,12 @@ playbook: dash api
 		-v $(SSH_AUTH_SOCK):/ssh-agent \
 		-e SSH_AUTH_SOCK=/ssh-agent \
 		ansible/ansible-runner ansible-playbook $(PLAYBOOK) -i inventory.yml 
+
+.PHONY: energy
+energy:
+	docker run -w /project -e HOME=/project --rm -it \
+		-v $(ROOT_DIR)/energy:/project \
+		-v $(ROOT_DIR)/known_hosts:/known_hosts \
+		-v $(SSH_AUTH_SOCK):/ssh-agent \
+		-e SSH_AUTH_SOCK=/ssh-agent \
+		ansible/ansible-runner ansible-playbook $(PLAYBOOK) -i inventory.yml 

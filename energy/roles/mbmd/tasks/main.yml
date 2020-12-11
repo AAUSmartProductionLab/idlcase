@@ -1,0 +1,22 @@
+---
+- name: create /opt/mbmd
+  file:
+    path: /opt/mbmd
+    state: directory
+
+- name: install mbmd
+  unarchive:
+    src: https://github.com/volkszaehler/mbmd/releases/download/0.12/mbmd_0.12_linux_armv6.tar.gz
+    dest: /opt/mbmd
+    remote_src: yes
+
+- name: install mbmd service
+  copy:
+    src: mbmd.service
+    dest: /etc/systemd/system/mbmd.service
+
+- name: enable and start mbmd
+  service:
+    name: mbmd
+    state: started
+    enabled: true
