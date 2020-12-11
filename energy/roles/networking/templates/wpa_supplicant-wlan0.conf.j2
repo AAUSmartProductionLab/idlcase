@@ -1,0 +1,8 @@
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=DK
+
+network={
+        ssid="{{ wpa_supplicant_ssid }}"
+        psk="{{ wpa_supplicant_passphrase }}"
+}
