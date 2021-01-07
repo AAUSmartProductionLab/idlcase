@@ -63,7 +63,7 @@ class IDLNetworking {
     // variable to save last publish time
     unsigned long lastPublish = 0;
 
-    bool usingDefaults = false;
+    char usingDefaults[6] = "false";
 
     // wifiManager portal and flash read/write functions.
     void wifiPortal(int timeout = 300, bool autoConnect = true); /* default 5 minutes*/
