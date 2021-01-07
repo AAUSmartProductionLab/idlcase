@@ -32,10 +32,14 @@ SSD1306Wire display(0x3c, 5, 4);
 
 // display loop
 void displayLoop() {
+  // Displays device information on the oled dispaly. 
     display.clear();
     if (WiFi.status() != WL_CONNECTED) {
         display.setFont(ArialMT_Plain_24);
-        display.drawString(0, 20, "Connecting...");
+        display.drawString(0, 0, idl.getDeviceId());
+        display.setFont(ArialMT_Plain_10);
+        display.drawString(0, 25, "Connecting...");
+        display.drawString(0, 36, idl.getVersionString());
     } else {
         display.setFont(ArialMT_Plain_24);
         display.drawString(0, 0, idl.getDeviceId());
@@ -53,8 +57,6 @@ void setup() {
     Serial.begin(115200);
     delay(100);
 
-
-
     idl.begin();
 
     // Initialising the UI will init the display too.
@@ -71,9 +73,10 @@ void loop() {
 
     for (int i = 0; i < nPins; i++){
         int ADC_VALUE = analogRead(pins[i]);
-        float voltage = (ADC_VALUE * 3.3 ) / (4095);
+        float voltage = (ADC_VALUE * 3.3 ) / (4095);  // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
+
         sprintf(pin_string, "pin:%i", pins[i]);
-        idl.pushMeasurement("flow",pin_string, "V", voltage);
+        idl.pushMeasurement("voltage",pin_string, "V", voltage);
     }
     idl.sendMeasurements();
 
