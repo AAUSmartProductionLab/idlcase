@@ -31,6 +31,14 @@
 
 /*=========================================================================*/
 /*=========================================================================*/
+// analog pins
+
+int pins[] = {32,33,34,35};
+int nPins = 4;
+int analogActivatePin = 23; // pull low to activate analog pins.
+int hasAnalogPins = false;
+
+/*=========================================================================*/
 // Onewire and DS18B20 sensor instance
 OneWire oneWire(ONE_WIRE_BUS); 
 DallasTemperature sensors(&oneWire);
@@ -222,6 +230,13 @@ void setup() {
     Serial.begin(115200);
     delay(100);
     
+    // read analog activation pin 
+    pinMode(analogActivatePin, INPUT_PULLUP);
+    delay(500);
+    hasAnalogPins = (0 == digitalRead(analogActivatePin)); // true if activation pin is pulled low
+    Serial.print("has analog pins = ");
+    Serial.println(hasAnalogPins);
+
     sensorsSetup();
 
     idl.begin();
@@ -262,6 +277,18 @@ void loop() {
         idl.pushMeasurement("light","sensor 1", "raw_full",myLuxData.full);
         idl.pushMeasurement("light","sensor 1", "raw_ir", myLuxData.ir);
         idl.pushMeasurement("light","sensor 1", "lux", myLuxData.lux);
+    }
+
+    if(hasAnalogPins){
+        char pin_string[8] ;
+
+        for (int i = 0; i < nPins; i++){
+            int adcValue = analogRead(pins[i]);
+            float flow = ((adcValue * (20-2) ) / (4095)) + 2;  // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
+
+            sprintf(pin_string, "pin:%i", pins[i]);
+            idl.pushMeasurement("flow",pin_string, "l/min", flow);
+        }
     }
 
     idl.sendMeasurements();
