@@ -43,7 +43,7 @@ void IDLNetworking::loop(int interval) {
         // do nothing
     }
 
-    lastPublish = now;
+    lastPublish = millis();
 
     if (!PSClient.connected()) {
         mqttConnect();
