@@ -47,6 +47,7 @@ float tempC;
 // lux sensor instance
 TwoWire I2CLight = TwoWire(1);
 Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591);
+bool hasLuxSensor = false ;
 
 /*=========================================================================*/
 // IDLNetworking instance
@@ -59,10 +60,14 @@ SSD1306Wire display(0x3c, 5, 4);
 
 // display loop
 void displayLoop() {
+  // Displays device information on the oled dispaly. 
     display.clear();
     if (WiFi.status() != WL_CONNECTED) {
         display.setFont(ArialMT_Plain_24);
-        display.drawString(0, 20, "Connecting...");
+        display.drawString(0, 0, idl.getDeviceId());
+        display.setFont(ArialMT_Plain_10);
+        display.drawString(0, 25, "Connecting...");
+        display.drawString(0, 36, idl.getVersionString());
     } else {
         display.setFont(ArialMT_Plain_24);
         display.drawString(0, 0, idl.getDeviceId());
@@ -111,11 +116,12 @@ struct lightData{
     uint16_t ir;
     uint16_t visible;
     float lux;
-} myLightData;
+} myLuxData;
 
 /*=========================================================================*/
 // dallas temperature sensors and tls light sensor setup
 void sensorsSetup() {
+    // temperature sensors
     sensors.begin();
 
     // locate devices on the bus
@@ -140,7 +146,7 @@ void sensorsSetup() {
     
     // lux sensor
     I2CLight.begin(21,22);
-    tsl.begin(&I2CLight);
+    hasLuxSensor = tsl.begin(&I2CLight);
     
     // You can change the gain on the fly, to adapt to brighter/dimmer light situations
     tsl.setGain(TSL2591_GAIN_LOW);      
@@ -189,7 +195,7 @@ void sensorsSetup() {
 
 /*=========================================================================*/
 // Read IR and Full Spectrum at once and convert to lux
-void readLightSensor(void)
+void readLuxSensor()
 {
   // More advanced data read example. Read 32 bits with top 16 bits IR, bottom 16 bits full spectrum
   // That way you can do whatever math and comparisons you want!
@@ -197,16 +203,17 @@ void readLightSensor(void)
   uint16_t ir, full;
   ir = lum >> 16;
   full = lum & 0xFFFF;
-  myLightData.full = full;
-  myLightData.ir = ir;
-  myLightData.visible = full-ir;
-  myLightData.lux = tsl.calculateLux(full,ir);
+  myLuxData.full = full;
+  myLuxData.ir = ir;
+  myLuxData.visible = full-ir;
+  myLuxData.lux = tsl.calculateLux(full,ir);
 
 //   Serial.print(F("[ ")); Serial.print(millis()); Serial.print(F(" ms ] "));
 //   Serial.print(F("IR: ")); Serial.print(ir);  Serial.print(F("  "));
 //   Serial.print(F("Full: ")); Serial.print(full); Serial.print(F("  "));
 //   Serial.print(F("Visible: ")); Serial.print(full - ir); Serial.print(F("  "));
 //   Serial.print(F("Lux: ")); Serial.println(tsl.calculateLux(full, ir), 6);
+
 }
 
 /*=========================================================================*/
@@ -216,6 +223,7 @@ void setup() {
     delay(100);
     
     sensorsSetup();
+
     idl.begin();
 
     // Initialising the UI will init the display too.
@@ -248,12 +256,13 @@ void loop() {
          
     }
 
-    // read light sensor 
-    readLightSensor();
-
-    idl.pushMeasurement("light","sensor 1", "raw_full",myLightData.full);
-    idl.pushMeasurement("light","sensor 1", "raw_ir", myLightData.ir);
-    idl.pushMeasurement("light","sensor 1", "lux", myLightData.lux);
+    if(hasLuxSensor ){
+        // read light sensor 
+        readLuxSensor();
+        idl.pushMeasurement("light","sensor 1", "raw_full",myLuxData.full);
+        idl.pushMeasurement("light","sensor 1", "raw_ir", myLuxData.ir);
+        idl.pushMeasurement("light","sensor 1", "lux", myLuxData.lux);
+    }
 
     idl.sendMeasurements();
 
