@@ -51,7 +51,8 @@ void IDLNetworking::loop(int interval) {
     PSClient.loop();
 
     if (WiFi.status() != WL_CONNECTED) {
-        wifiPortal();
+        wifiPortal(1,true);
+        delay(1000);
     }
 }
 
