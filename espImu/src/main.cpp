@@ -21,12 +21,10 @@
 const int BLOCK_SIZE = 1024;
 
 const int samplingFrequency = 1000;
-const int maxMicFreq = 1000;
-const int nBins = 16;
+const int nBins = 32;
 
-const float binSize = samplingFrequency / BLOCK_SIZE;
-const int usefulBins = maxMicFreq / binSize;
-const int binsToBin = ceil(usefulBins / nBins);
+const float binSize = samplingFrequency / (BLOCK_SIZE * 1.0);
+const int binsToBin = ceil(BLOCK_SIZE / nBins);
 double bins[nBins];
 
 double vReal[BLOCK_SIZE];
@@ -39,13 +37,13 @@ arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
 
 /*=========================================================================*/
 // imu instance
-TwoWire I2CMPU = TwoWire(1);
-MPU9250FIFO mpu(I2CMPU,0x68);
-size_t fifoSize;
-float fifoBuffer[85]; //  512byte/ 6 byte data = 85 data points (accel_x = 2byte, accel_y = 2byte, accel_z = 2byte)
-// I2C device found at address 0x0C  !
-// I2C device found at address 0x68  !
-// I2C device found at address 0x76  !
+//TwoWire I2CMPU = TwoWire(1);
+MPU9250 mpu(Wire, 0x68);
+unsigned long lastRead = micros();
+
+// I2C device found at address 0x0C  ! bme
+// I2C device found at address 0x68  ! mpu9250
+// I2C device found at address 0x76  ! mpu
 
 /*=========================================================================*/
 // idl instance
@@ -85,7 +83,7 @@ void setup() {
     
 
     // setup i2c for the mpu
-    I2CMPU.begin(21,22,400000);
+    //I2CMPU.begin(21,22,400000);
 
     // start communication with IMU 
     int status = mpu.begin();
@@ -104,7 +102,6 @@ void setup() {
     mpu.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_184HZ);
     // setting SRD to 0 for a 1000 Hz update rate
     mpu.setSrd(0);
-    mpu.enableFifo(true,false,false,false);
 
 }
 
@@ -125,39 +122,15 @@ void loop() {
     int counter = 0;
     while (counter < BLOCK_SIZE){
         
-        delay(25);
+        while(micros() <= lastRead + 990){/*do nothing */}
+        lastRead=micros();
 
-        mpu.readFifo();
-        mpu.getFifoAccelX_mss(&fifoSize, fifoBuffer);
-        
-        if (fifoSize >= 85){
-            Serial.print("fifo buffer overflow"); 
-            Serial.print(fifoSize);
-        } 
+        mpu.readSensor();
 
         // transfer the fifo buffer til vReal
-        for (size_t i = 0; i < fifoSize && counter < BLOCK_SIZE; i++, counter++)
-        {
-            vReal[counter] = fifoBuffer[i];
-            vImag[counter] = 0;
-        }
-    }
-
-    // for(int i = 0; i < BLOCK_SIZE; i++){
-    //     Serial.print(vReal[i]);
-    // } 
-    
-
-    // // Prepare the spamles for FFT
-    // // Discard the least significant bits to make it from 32 bit to 16 bit.
-    // // Also add some dithering noise to help with downsampling artifacts
-    // for (uint16_t i = 0; i < BLOCK_SIZE; i++) {
-    //     vReal[i] = short((samples[i] + dithernoise()) >> 16);
-    //     vImag[i] = 0.0; // Imaginary part must be zeroed in case of looping to
-    //                     // avoid wrong calculations and overflows
-    // }
-    for (int i = 0; i < BLOCK_SIZE/2; i++){
-        Serial.print(vReal[i]); Serial.print(", ");
+        vReal[counter] = mpu.getAccelX_mss();
+        vImag[counter] = 0;
+        counter++ ;
     }
 
     // Do the FFT
@@ -165,42 +138,52 @@ void loop() {
     FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
     FFT.Compute(FFT_FORWARD);
     FFT.ComplexToMagnitude(); // magintude is half the size
+
     Serial.print("major peak = "); 
     Serial.println(FFT.MajorPeak());
     
-    //Serial.print(" \n");
 
     // init the bins with zeros
     for (int i = 0; i < nBins; i++) {
         bins[i] = 0;
     }
 
-    // // go over each bin
-    // for (int i = 0; i <= nBins; i++) {
-    //     // Calculate the offset in the vReal array
-    //     int offset = i * binsToBin;
-    //     // Go the offset and find the maximum value in vReal array
-    //     for (int j = offset; j < offset + binsToBin; j++) {
-    //         bins[i] = max(bins[i], log2(vReal[j]));
-    //     }
+    // walk over half of the data (half is just mirror)
+    for (int i = 0; i < BLOCK_SIZE/2; i++){
+        int binIndex = floor(i / (BLOCK_SIZE/2/nBins));
+
+        bins[binIndex] = max(bins[binIndex], vReal[i]);
+    }
+
+    // for (int i = 0; i < nBins; i++){
+    //     Serial.print(bins[i]); Serial.print(", ");
     // }
 
-    // idl.pushMeasurement("microphone","sensor 1","Hz",FFT.MajorPeak());
-
-    // // Store the Bins as key value pairs.
-    // // The key is the start frequency of the bin
-    // for (int i = 0; i < nBins; i++) {
-    //     // calculate what the offset was in the vReal array
-    //     int offset = i * binsToBin;
-    //     // calculate the frequency for this bin.
-    //     char freq[20];
-    //     sprintf(freq,"%.0f", ((offset * samplingFrequency) / 1024.0));
-    //     //int freq2 = ((offset * samplingFrequency) / 1024.0);
-    //     // store the bin in json.
-    //     auto msg = idl.pushMeasurement("microphone","sensor 1","dBm",bins[i]);
-    //     idl.addTag(msg,"band",freq);
+    // for (int i = 0; i < BLOCK_SIZE/2; i++){
+    //     Serial.print(vReal[i]); Serial.print(", ");
     // }
 
-    // idl.sendMeasurements();
+    idl.pushMeasurement("vibrationMajorPeak","sensor 1","Hz",FFT.MajorPeak());
+
+    
+    idl.pushMeasurement("temperature","sensor 1","celsius",mpu.getTemperature_C());
+
+    Serial.println(mpu.getTemperature_C());
+    
+    // Store the Bins as key value pairs.
+    // The key is the start frequency of the bin
+    // Walk over the bins
+    for (int i = 0; i < nBins; i++) {
+        // calculate what the offset was in the vReal array
+        int offset = i * (BLOCK_SIZE/2/nBins);
+        // calculate the frequency for this bin.
+        char freq[20];
+        sprintf(freq,"%.0f", offset * binSize);
+        // store the bin in json.
+        auto msg = idl.pushMeasurement("vibration","sensor 1","m/s2/Hz",bins[i]);
+        idl.addTag(msg,"band",freq);
+    }
+
+     idl.sendMeasurements();
 
 }
