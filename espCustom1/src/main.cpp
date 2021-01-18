@@ -35,7 +35,7 @@
 
 int pins[] = {32,33,34,35};
 int nPins = 4;
-int analogActivatePin = 23; // pull low to activate analog pins.
+int analogActivatePin = 12; // pull low to activate analog pins.
 int hasAnalogPins = false;
 
 /*=========================================================================*/
@@ -267,7 +267,7 @@ void loop() {
         char hex_string[20] ;
         array_to_string(thermoAdr, 8, hex_string);
 
-        idl.pushMeasurement("temperature",hex_string,"celcius",tempC);
+        idl.pushMeasurement("temperature",hex_string,"celsius",tempC);
          
     }
 
@@ -284,7 +284,7 @@ void loop() {
 
         for (int i = 0; i < nPins; i++){
             int adcValue = analogRead(pins[i]);
-            float flow = ((adcValue * (20-2) ) / (4095)) + 2;  // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
+            float flow = ((adcValue * (20-2) ) / (4095.0)) + 2;  // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
 
             sprintf(pin_string, "pin:%i", pins[i]);
             idl.pushMeasurement("flow",pin_string, "l/min", flow);
