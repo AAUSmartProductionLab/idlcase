@@ -1,24 +1,24 @@
 sensorWidth = 20.8;
 sensorDepth = 14.5;
 sensorHeight = 5; // height from the tips of solderings on the bottom up to the highest component on the top
-spaceing = 1.5;
+spaceing = 3;
 
 pcbClerance = 1.8; // clearance underneath the pcb. Determines the height of the pcb standoffs.
 pcbHoles = [[2.6,11.8],[17.9, 11.8]];  // relative to lower left corner
-pcbHoleDia = 3;
+pcbHoleDia = 2.6;
 pcbThickness = 1.5;
 
 boxWidth = sensorWidth+2*spaceing;
 boxDepth = sensorDepth+2*spaceing;
 boxHeight = sensorHeight+spaceing;
 
-wallThickness = 1.2;
+wallThickness = 1.6;
 
 lidHeight = 2;
-lSlidWidth = 3;
+lSlidWidth = 3.5;
 
-clipThickness = 0.5;
-clipHeight = 2;
+clipThickness = 1.2;
+clipHeight = 3.5;
 clipTolerance = 0.1;
 
 $fn = 40;
@@ -40,6 +40,10 @@ module bottom(){
 
     //standoffs
     translate([-sensorWidth/2, -sensorDepth/2,wallThickness])standoffs();
+
+    //support under pins
+    translate([-sensorWidth/2, -sensorDepth/2,wallThickness])cube([sensorWidth,1.2,pcbClerance-0.8]);
+
 
 }
 
@@ -70,20 +74,22 @@ module lid(){
 
 
 module clip(){
-    cube([clipThickness,boxDepth,lidHeight/2]);
-    translate([clipThickness,0,0])cube([clipThickness,boxDepth,lidHeight+clipHeight]);
-    translate([clipThickness,0,lidHeight+clipHeight])rotate([-90,0,0,])
-        linear_extrude(boxDepth)
-            polygon([[0,0],[-clipThickness*2,clipThickness],[0,clipThickness*2]]);
+    length = boxDepth-1.6;
 
-
+    translate([0,0.8]){    
+        rotate([-90,0,0])linear_extrude(length)polygon([[0,0],[0.8,0],[0.8,-0.8]]);
+        translate([0.8,0,0])cube([clipThickness,length,lidHeight+clipHeight]);
+        translate([0.8+clipThickness,0,0])rotate([-90,0,0])linear_extrude(length)polygon([[0,0],[0.8,0],[0,-0.8]]);
+        translate([0.8,0,lidHeight+clipHeight])rotate([-90,0,0,])
+            linear_extrude(length)
+                polygon([[0,0],[-1.2,0.8*2],[0,0.8*4]]);
+    }
 }
 
 module clipHole(){
-    translate([clipThickness-clipTolerance,0,clipHeight])rotate([-90,0,0,])
+    translate([0.8-clipTolerance,0,clipHeight])rotate([-90,0,0,])
         linear_extrude(boxDepth)
-            polygon([[0,0],[-clipThickness*2,clipThickness],[0,clipThickness*2]]);
-
+                polygon([[0,0],[-1.2,0.8*2],[0,0.8*4]]);
 }
 
 module pcbDummy(){
@@ -102,10 +108,7 @@ module pcbDummy(){
 module standoffs(){
     for(i = pcbHoles){
         linear_extrude(pcbClerance+pcbThickness){
-            difference(){
-                translate(i)circle(d=pcbHoleDia);
-                translate(i)circle(d=pcbHoleDia-1);
-            }    
+            translate(i)circle(d=pcbHoleDia); 
         } 
         linear_extrude(pcbClerance){
             difference(){
