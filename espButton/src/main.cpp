@@ -47,7 +47,7 @@ void displayLoop() {
 /*=========================================================================*/
 
 
-EasyButton button(26); // pin 26
+EasyButton button(2); // pin 26
 
 void onPressed() {
     idl.pushEvent("events","button pressed shortly","shortButtonPress");
@@ -78,7 +78,7 @@ void setup() {
 }
 
 void loop() {
-    idl.loop(0);
+    idl.loop();
 
     button.read();
 
