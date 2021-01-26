@@ -284,7 +284,12 @@ void loop() {
 
         for (int i = 0; i < nPins; i++){
             int adcValue = analogRead(pins[i]);
-            float flow = ((adcValue * (20-2) ) / (4095.0)) + 2;  // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
+        
+            // NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin.
+            float flow = ((adcValue - 182.29) * 15 ) / (3797.78 - 182.29);      
+            //min 0.238V = adc 182.29 = 0L/min &&  max 2.975V = adc 3797.78 = 15L/min
+
+            if(flow < 0) flow = 0;
 
             sprintf(pin_string, "pin:%i", pins[i]);
             idl.pushMeasurement("flow",pin_string, "l/min", flow);
