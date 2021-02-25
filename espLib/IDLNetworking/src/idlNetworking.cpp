@@ -51,7 +51,7 @@ void IDLNetworking::loop(int interval) {
     PSClient.loop();
 
     if (WiFi.status() != WL_CONNECTED) {
-        wifiPortal();
+        wifiPortal(60,true); //timeout is 60 seconds and does autoconnect
     }
 }
 
