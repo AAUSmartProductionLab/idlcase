@@ -2,6 +2,8 @@
 Description=IDL api for various tasks
 
 [Service]
+Restart=always
+RestartSec=10s
 ExecStart=/home/pi/api
 DynamicUser=yes
 

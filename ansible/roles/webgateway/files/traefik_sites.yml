@@ -68,11 +68,11 @@ http:
     grafana-grundfos:
       loadBalancer:
         servers:
-          - url: "http://10.14.47.4:3000/"
+          - url: "http://10.14.47.5:3000/"
     api-grundfos:
       loadBalancer:
         servers:
-          - url: "http://10.14.47.4:9090/"
+          - url: "http://10.14.47.5:9090/"
 
   middlewares:
     httpsredirect:
