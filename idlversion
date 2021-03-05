@@ -8,7 +8,7 @@ TYPE=$(basename $(pwd))
 
 # Access VPN network using artifacts normally used by ansible
 CURLCMD=`echo -n "curl --fail -s ${TARGET}/db/${TYPE} | jq .\"version\""`
-CURRENTVERSION=`ssh -F ../ssh_config -S /tmp/.idl-%C -o "ControlMaster=auto" -o "ControlPersist=1h" metric-log01 ${CURLCMD}`
+CURRENTVERSION=`ssh -F ../ssh_config -S /tmp/.idl-%C -o "ControlMaster=auto" -o "ControlPersist=1m" metric-log01 ${CURLCMD}`
 
 # Fetch current version
 NEXTVERSION=$((CURRENTVERSION+1))

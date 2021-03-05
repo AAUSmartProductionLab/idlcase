@@ -6,3 +6,9 @@
   loop:
     - https://github.com/fasmide.keys
     - https://github.com/hjalte33.keys
+    - https://github.com/martinjensen37.keys
+
+- name: add development pc public key to user {{ ansible_user }}
+  authorized_key:
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDTO/V8pJbEq2tQ9ETOnK/LoJ7ZKWUzvPBOyjl2RoD/Zq9eqbL60g/0JSrm6ru/Ic0+mOb1OviJWbDmshJYGZ2djPlEIbMf6gaB1bgiL+VVeCKuTrncBki5EuEs3uBo66LqS1jX/RtRB5LKcD7VGknRdnlElsZ6LLqfH0x8WoQPyy7PV4fbb0/7yMTehf9R2CQDrqepOQgDJWn31w/llJ9yI1tyvYZgroyFPRi6AuzjdVpzSslx4Ob0qoRIV7mDbux6G9LLlOGdGoi4IewASSK7r4A50htgMa+22pm1l/LeOdp4iw74tI8ogfQgcFrXbmoDea2sf7Z+r/VDvm60D8Falelan/fDjtbC+btOiK3FEwdtAtO1ukrJp1jDsfuX6fyA2SBdpnWbpJzH4lzRLDJbxhEffTh0yX0DgmeanKj2G1Nhy233URJIQ62kPK7nlut8xCHo4cNwc5zd0xV86fxhfcTaIFcm8Eklq67erDNgcrgnF/nw7MQATQgTmEaZmk8= idluser@idl-development"
+    user: "{{ ansible_user }}"
