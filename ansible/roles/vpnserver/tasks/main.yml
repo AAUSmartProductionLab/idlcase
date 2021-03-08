@@ -9,6 +9,14 @@
     state: present
     force_apt_get: true
 
+- name: Creating wg key file for each case
+  copy:
+    dest: "/etc/systemd/network/keys/{{ item.wg0_ip_address}}"
+    content: |
+      "{{ item.wg0.public_key }}"
+  loop:
+    "{{ groups:['case'] }}"    
+
 - name: install wireguard device
   template:
     src: wg0.netdev.j2

@@ -9,6 +9,6 @@ ListenPort=51820
 
 {% for peer in groups['case'] %}
 [WireGuardPeer]
-PublicKey={{ hostvars[peer].wg0.public_key }}
+PublicKeyFile="/etc/systemd/network/keys/{{ hostvars[peer].wg0_ip_address }}"
 AllowedIPs={{ hostvars[peer].wg0_ip_address }}/32
 {% endfor %}
