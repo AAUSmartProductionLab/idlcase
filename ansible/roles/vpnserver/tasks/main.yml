@@ -9,13 +9,25 @@
     state: present
     force_apt_get: true
 
-- name: Creating wg key file for each case
+- name: create directory for case wg-keys
+  file:
+    path: /etc/systemd/network/keys/
+    state: directory
+
+- name: Store wg public key file for each reachable case
   copy:
-    dest: "/etc/systemd/network/keys/{{ item.wg0_ip_address}}"
+    dest: "/etc/systemd/network/keys/{{ hostvars[item].wg0_ip_address }}" # wg0_ip_address is not necessarily the same ip as "item"
     content: |
-      "{{ item.wg0.public_key }}"
-  loop:
-    "{{ groups:['case'] }}"    
+      {{ hostvars[item].wg0.public_key }}
+
+  when: hostvars[item].wg0.public_key is defined # skip cases that are not online
+  loop: "{{ groups['case'] }}"
+
+- name: Read wg public key files back to include cases that are currently offline
+  slurp:
+    src: "/etc/systemd/network/keys/{{ hostvars[item].wg0_ip_address }}"
+  register: slurpfile
+  loop: "{{ groups['case'] }}"
 
 - name: install wireguard device
   template:

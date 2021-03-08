@@ -7,8 +7,9 @@ Description=Wireguard server endpoint
 PrivateKey={{ wg0.private_key }}
 ListenPort=51820
 
-{% for peer in groups['case'] %}
+{% for peer in slurpfile['results'] -%}
 [WireGuardPeer]
-PublicKeyFile="/etc/systemd/network/keys/{{ hostvars[peer].wg0_ip_address }}"
-AllowedIPs={{ hostvars[peer].wg0_ip_address }}/32
+PublicKey={{- peer.content | b64decode -}}
+AllowedIPs={{ hostvars[peer.item].wg0_ip_address }}/32
+
 {% endfor %}
