@@ -19,7 +19,6 @@
     dest: "/etc/systemd/network/keys/{{ hostvars[item].wg0_ip_address }}" # wg0_ip_address is not necessarily the same ip as "item"
     content: |
       {{ hostvars[item].wg0.public_key }}
-
   when: hostvars[item].wg0.public_key is defined # skip cases that are not online
   loop: "{{ groups['case'] }}"
 
