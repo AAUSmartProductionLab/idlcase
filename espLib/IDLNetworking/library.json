@@ -34,7 +34,7 @@
       {
         "name":"WifiManager",
         "author":"tzapu",
-        "version":"https://github.com/tzapu/WiFiManager.git#development"
+        "version":"https://github.com/tzapu/WiFiManager.git"
       },
       {
         "name":"ArduinoJson",
