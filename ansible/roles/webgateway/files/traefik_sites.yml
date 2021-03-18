@@ -24,6 +24,30 @@ http:
         certResolver: sample
       middlewares:
         - api-auth
+    grafana-third-case:
+      rule: "Host(`grafana.third-case.idl.mp.aau.dk`)"
+      service: grafana-third-case
+      tls:
+        certResolver: sample
+    api-third-case:
+      rule: "Host(`api.third-case.idl.mp.aau.dk`)"
+      service: api-third-case
+      tls:
+        certResolver: sample
+      middlewares:
+        - api-auth
+    grafana-fourth-case:
+      rule: "Host(`grafana.fourth-case.idl.mp.aau.dk`)"
+      service: grafana-fourth-case
+      tls:
+        certResolver: sample
+    api-fourth-case:
+      rule: "Host(`api.fourth-case.idl.mp.aau.dk`)"
+      service: api-fourth-case
+      tls:
+        certResolver: sample
+      middlewares:
+        - api-auth
     grafana-grundfos:
       rule: "Host(`grafana.grundfos.idl.mp.aau.dk`)"
       service: grafana-grundfos
@@ -65,6 +89,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.14.47.3:9090/"
+    grafana-third-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.4:3000/"
+    api-third-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.4:9090/"
     grafana-grundfos:
       loadBalancer:
         servers:
@@ -73,6 +105,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://10.14.47.5:9090/"
+    grafana-fourth-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.6:3000/"
+    api-fourth-case:
+      loadBalancer:
+        servers:
+          - url: "http://10.14.47.6:9090/"
 
   middlewares:
     httpsredirect:
