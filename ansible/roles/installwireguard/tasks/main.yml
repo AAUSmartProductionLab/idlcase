@@ -1,0 +1,66 @@
+---
+- name: trust wireguard repo keys
+  apt_key:
+    id: "{{ item }}"
+    keyserver: keyserver.ubuntu.com
+    state: present
+  loop:
+    - 648ACFD622F3D138
+    - 04EE7237B7D453EC
+
+- name: limit unstable
+  copy:
+    src: limit-unstable
+    dest: /etc/apt/preferences.d/limit-unstable
+
+- name: add debian unstable for wireguard
+  apt_repository: 
+    repo: 'deb http://deb.debian.org/debian/ unstable main' 
+    state: present 
+    filename: unstable
+    update_cache: yes
+
+- name: install wireguard
+  apt:
+    name: wireguard
+    state: present
+    force_apt_get: true
+  register: wg_install
+
+- name: reboot to make wireguard accessible 
+  reboot:
+  when: wg_install.changed
+
+- name: enable wireguard interface
+  command: ip link add wg0 type wireguard
+  when: "'wg0' not in ansible_interfaces"
+
+- name: create wg keys
+  block:
+    - name: get wg key if it is already registered
+      shell: wg show wg0 private-key
+      register: wg_key
+      changed_when: False
+      failed_when: wg_key.stdout == "(none)"
+
+  rescue:
+    - name: no wg key registered. Check if wg key file exists
+      stat:
+        path: /home/pi/wg_key
+      register: stat_result
+
+    - name: Create new wg key if no key file exists.
+      shell: wg genkey
+      register: wg_key
+      when: not stat_result.stat.exists
+  
+  always:
+    - name: Saving wg key to file
+      copy:
+        dest=/home/pi/wg_key
+        content={{ wg_key.stdout }}
+      register: saved_key
+
+    - name: set wg private key from file
+      command: wg set wg0 private-key wg_key
+      when: saved_key.changed

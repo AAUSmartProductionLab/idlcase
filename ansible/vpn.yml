@@ -1,16 +1,21 @@
 ---
-- hosts:
+- hosts: # Install wireguard on the case
   - case
+  roles:
+    - { name: installwireguard, tags: installwireguard}
+    
+- hosts: # Gather keys
   - cloud
+  - case
   roles:
     - { name: gatherkeys, tags: gatherkeys }
 
-- hosts: 
+- hosts: # setup wireguard on the case
   - case
   roles:
     - { name: vpnclient, tags: vpnclient }
 
-- hosts: 
+- hosts: # Setup the cloud vpn server to register new cases. 
   - cloud
   roles:
     - { name: vpnserver, tags: vpnserver }
