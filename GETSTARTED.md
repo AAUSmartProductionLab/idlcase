@@ -101,30 +101,5 @@ sudo wg genkey > wg_key
 
 
 
-[WireGuard]
-PrivateKey=WD33CK4eAlualCLw6NPqGTAfkQxV9PoNwGibl+luxGU=
-ListenPort=51820
 
-[WireGuardPeer]
-PublicKey=JB85+QKhRviVlJ5L+qrwm/MRjrbMyh/QrzPCgRoEbDA=
-AllowedIPs=10.14.47.5/32
 
-[WireGuardPeer]
-PublicKey=hr2mOT/Hpk2ahbDbENJo1RzH02Mutus8CbWmUPTCXSM=
-AllowedIPs=10.14.47.2/32
-
-[WireGuardPeer]
-PublicKey=WWAiLMmkEa9ttSkwFdQ6GCzeN/m74syQ0nuvUcggW3Q=
-AllowedIPs=10.14.47.3/32
-
-"[
-    {       
-        "table": "temperature",     
-        "name": "sensor 1",         
-        "unit": "celcius",          
-        "value": 23.34,             
-        "tags":{                    
-            "placement" : "kitchen"
-        }
-    },
-]"
