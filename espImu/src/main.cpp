@@ -2,7 +2,6 @@
 #include "version.h"
 #include "MPU9250.h"
 
-
 /***************************************************************************/
 // oled screen
 #include "SSD1306Wire.h"
@@ -38,7 +37,7 @@ arduinoFFT FFT = arduinoFFT(vReal, vImag, BLOCK_SIZE,
 /*=========================================================================*/
 // imu instance
 //TwoWire I2CMPU = TwoWire(1);
-MPU9250 mpu(Wire, 0x68);
+Mpu9250 mpu(&Wire, 0x68);
 unsigned long lastRead = micros();
 
 // I2C device found at address 0x0C  ! bme
@@ -77,7 +76,7 @@ void setup() {
     idl.begin();
 
 
-    Wire.begin();
+    Wire.begin(5,4);
     display.init();
     displayLoop();
     
@@ -86,7 +85,7 @@ void setup() {
     //I2CMPU.begin(21,22,400000);
 
     // start communication with IMU 
-    int status = mpu.begin();
+    int status = mpu.Begin();
     if (status < 0) {
         Serial.println("IMU initialization unsuccessful");
         Serial.println("Check IMU wiring or try cycling power");
@@ -95,13 +94,13 @@ void setup() {
         while(1) {}
     }
     // setting the accelerometer full scale range to +/-8G
-    mpu.setAccelRange(MPU9250::ACCEL_RANGE_16G);
+    mpu.ConfigAccelRange(Mpu9250::ACCEL_RANGE_16G);
     // setting the gyroscope full scale range to +/-500 deg/s
-    mpu.setGyroRange(MPU9250::GYRO_RANGE_500DPS);
+    mpu.ConfigGyroRange(Mpu9250::GYRO_RANGE_500DPS);
     // setting DLPF bandwidth to 184 Hz
-    mpu.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_184HZ);
+    mpu.ConfigDlpf(Mpu9250::DLPF_BANDWIDTH_184HZ);
     // setting SRD to 0 for a 1000 Hz update rate
-    mpu.setSrd(0);
+    mpu.ConfigSrd(0);
 
 }
 
@@ -125,10 +124,10 @@ void loop() {
         while(micros() <= lastRead + 990){/*do nothing */}
         lastRead=micros();
 
-        mpu.readSensor();
+        mpu.Read();
 
         // transfer the fifo buffer til vReal
-        vReal[counter] = mpu.getAccelX_mss();
+        vReal[counter] = mpu.accel_z_mps2();
         vImag[counter] = 0;
         counter++ ;
     }
@@ -166,9 +165,9 @@ void loop() {
     idl.pushMeasurement("vibrationMajorPeak","sensor 1","Hz",FFT.MajorPeak());
 
     
-    idl.pushMeasurement("temperature","sensor 1","celsius",mpu.getTemperature_C());
+    idl.pushMeasurement("temperature","sensor 1","celsius",mpu.die_temperature_c());
 
-    Serial.println(mpu.getTemperature_C());
+    Serial.println(mpu.die_temperature_c());
     
     // Store the Bins as key value pairs.
     // The key is the start frequency of the bin
