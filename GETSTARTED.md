@@ -97,10 +97,18 @@ sudo apt full-upgrade
    ```
 2. Go back into the inventory file and change the host ip so it matches the `wg0_ip_address`
 
-3. Run the final playbook to deploy the data logger. At the moment there is an issue with failing to restart hostpad. Just rerun the script to resolve the issue.
+3. Run the final playbook to deploy the data logger.
    ```shell
    make playbook
    ```
+
+4. If you need to, you can now ssh into the pi through the gateway using the following.
+    ```shell
+    ssh -F ssh_config pi@10.14.47.*
+    ```
+    replacing the star with your chosen ip address
+
+5. WARNING! At the moment there is sometimes an issue with failing to restart hostapd. If that's the case, ssh into the pi and check `rfkill list` that wifi is not soft blocked. If wifi is soft blocked use `rfkill ublock <id>` to resolve the issue. Then run the playbook again.
 
 # Grafana
 1. Login to grafana on `grafana.myCaseName.idl.mp.aau.dk` and login with username `admin` and password `admin` 
