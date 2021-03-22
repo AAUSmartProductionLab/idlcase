@@ -1,6 +1,6 @@
 #ifndef _IDLNETWORKING_H_
 #define _IDLNETWORKING_H_
-#define IDL_JSON_SIZE 2048
+#define IDL_JSON_SIZE 8094
 
 /***************************************************************************/
 //  default libraries
